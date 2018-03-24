@@ -34,7 +34,6 @@ Server responds
 AHOY-HOY:[random access token]
 
 The client must store the token and include it in subsequent requests.
-
 */
 
 /*
@@ -51,11 +50,17 @@ struct Message {
     int message_length;
 };
 
+/*
+ * Generate an access token for the client
+ */
 char *create_token(char *token, size_t size) {
     token = "12345678";
     return token;
 }
 
+/*
+ * Send handshake response.
+ */
 int handshake(int socket) {
     printf("handshake()\n");
     /* */
@@ -74,7 +79,11 @@ int handshake(int socket) {
     return 0;
 }
 
-/* Parse message structure */
+/*
+ * Parse message structure.
+ * Splits message into tokens delimited by colon (:)
+ * Returns tokenized pointer array.
+ */
 char **parse_message(char *message, int length) {
     char **tokens;
     char *token;
@@ -113,6 +122,9 @@ char **parse_message(char *message, int length) {
     return tokens;
 }
 
+/*
+ * Write message into chat log file
+ */
 int command_write(char *message) {
     FILE *fp;
     /* open file pointer */
@@ -126,6 +138,9 @@ int command_write(char *message) {
     return 0;
 }
 
+/*
+ * Display chat log
+ */
 int command_history(int socket) {
     FILE *fp;
     char *header;
@@ -169,7 +184,7 @@ int main() {
 
     /* Bind the socket */
     status = bind(server_socket, (struct sockaddr *)&server_address,
-                                sizeof(server_address));
+                  sizeof(server_address));
 
     if (status < 0) {
         printf("Error binding socket\n");
@@ -220,6 +235,7 @@ int main() {
         /* Store the length of the input string */
         input_len = strlen(input);
 
+        /* Check if input is a handshake initiation */
         if (strcmp(input, "AHOY") == 0) {
             handshake(client_socket);
             continue;
