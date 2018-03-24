@@ -20,3 +20,4 @@ typedef struct _Message {
 } Message;
 
 char *format_message(chatMessage *message);
+chatMessage *parse_message(char *message);

@@ -144,15 +144,17 @@ int main() {
 
         /* Send message to server */
         len = send(network_socket, msg_str, MAX_MSG, 0);
-        printf("sent %ld bytes\n", len);
+        // printf("sent %ld bytes\n", len);
 
         /* Get response from server */
         len = recv(network_socket, server_response, MAX_MSG, 0);
         // printf("received %ld bytes\n", len);
 
+        chatMessage *msg = parse_message(server_response);
+
         /* Print out the response */
         printtime();
-        printf("<server> %s\n", server_response);
+        printf("<%s> %s\n", msg->nickname, msg->message);
 
         server_response = malloc(MAX_MSG);
         free(input);

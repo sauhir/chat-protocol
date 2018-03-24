@@ -67,62 +67,6 @@ int handshake(int socket) {
     return 0;
 }
 
-/*
- * Parse message structure.
- * Splits message into tokens delimited by colon (:)
- * Returns tokenized pointer array.
- */
-chatMessage *parse_message(char *message) {
-    char **tokens;
-    char *token;
-    char *tmp = message;
-    int c;
-    int length;
-    size_t count = 0;
-
-    length = sizeof(message);
-
-    if (length == 0) {
-        /* Empty string */
-        return NULL;
-    }
-
-    while (*tmp) {
-        if (strcmp(tmp, ":") == 0) {
-            count++;
-        }
-        tmp++;
-    }
-
-    tokens = calloc(count, sizeof(char *));
-
-    c = 0;
-    /* get the first token */
-    token = strtok(message, ":");
-
-    chatMessage *msg = malloc(sizeof(chatMessage));
-
-    while (token != NULL) {
-        printf("%d: %s\n", c, token);
-        /* duplicate token into tokens */
-        switch (c) {
-        case 0:
-            msg->token = strdup(token);
-            break;
-        case 1:
-            msg->nickname = strdup(token);
-            break;
-        case 2:
-            msg->message = strdup(token);
-            break;
-        }
-        c++;
-        token = strtok(NULL, ":");
-    }
-
-    return msg;
-}
-
 int open_client_socket(int server_socket) {
     int client_socket;
     client_socket = accept(server_socket, NULL, NULL);
@@ -207,11 +151,13 @@ int main() {
             continue;
         }
 
-        chatMessage *message = parse_message(input);
+        command_write(input);
+        char *tokenizable = strdup(input);
+
+        chatMessage *message = parse_message(tokenizable);
 
         printf("<%s> %s\n", message->nickname, message->message);
-        command_write(input);
-        send(client_socket, "foo", strlen("foo"), 0);
+        send(client_socket, input, strlen(input), 0);
         printf("Response sent\n");
     }
 
