@@ -10,13 +10,8 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define MAX_RESPONSE 512
-#define MAX_NICK 32
-
-typedef struct chat_session {
-    char *nick;
-    char *token;
-} chat_session;
+#include "chat.h"
+#include "client.h"
 
 int printtime() {
     time_t rawtime;
@@ -30,7 +25,7 @@ int printtime() {
     return 0;
 }
 
-struct chat_session *create_session() {
+chat_session *create_session() {
     chat_session *session = calloc(1, sizeof(chat_session));
     session->token = "";
     session->nick = "";
@@ -38,16 +33,16 @@ struct chat_session *create_session() {
 }
 
 int handshake(int socket, chat_session *session) {
-    char response[MAX_RESPONSE];
+    char response[MAX_MSG];
     char *part;
 
     /* send greeting */
-    send(socket, "AHOY", MAX_RESPONSE, 0);
+    send(socket, "AHOY", MAX_MSG, 0);
     /* receive response */
     printtime();
     printf("Greeting sent\n");
 
-    recv(socket, response, MAX_RESPONSE, 0);
+    recv(socket, response, MAX_MSG, 0);
 
     /* get first part of response */
     part = strtok(response, ":");
@@ -113,8 +108,8 @@ int main() {
     printtime();
     printf("Connected to the server\n");
 
-    server_response = calloc(MAX_RESPONSE, sizeof(char));
-    input = calloc(MAX_RESPONSE, sizeof(char));
+    server_response = calloc(MAX_MSG, sizeof(char));
+    input = calloc(MAX_MSG, sizeof(char));
 
     /* Shake hands with the server */
     status = handshake(network_socket, session);
@@ -129,8 +124,6 @@ int main() {
 
     /* Main loop */
     while (1) {
-        //        printf("while(1)\n");
-
         printf("Say something:\n");
 
         /* Read from stdin until newline
@@ -141,20 +134,20 @@ int main() {
         printf("<%s> %s\n", session->nick, input);
 
         /* Send message to server */
-        len = send(network_socket, input, MAX_RESPONSE, 0);
+        len = send(network_socket, input, MAX_MSG, 0);
         printf("sent %ld bytes\n", len);
 
         /* Get response from server */
-        len = recv(network_socket, server_response, MAX_RESPONSE, 0);
+        len = recv(network_socket, server_response, MAX_MSG, 0);
         // printf("received %ld bytes\n", len);
 
         /* Print out the response */
         printtime();
         printf("<server> %s\n", server_response);
 
-        server_response = malloc(MAX_RESPONSE);
+        server_response = malloc(MAX_MSG);
         free(input);
-        input = calloc(MAX_RESPONSE, sizeof(char));
+        input = calloc(MAX_MSG, sizeof(char));
     }
 
     free(input);

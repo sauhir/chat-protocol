@@ -9,22 +9,9 @@
 
 #include <netinet/in.h>
 
-#define MAX_MSG 512
-
-char nick[32];
-
-enum msg_type {
-    MSG_ERROR = -1,
-    MSG_NORMAL = 1,
-    MSG_COMMAND = 2,
-    MSG_HANDSHAKE = 4,
-};
-
-enum cmd_type {
-    CMD_READ = 1,
-    CMD_WRITE = 2,
-    CMD_CLEAR = 4,
-};
+#include "chat.h"
+#include "server.h"
+#include "server_commands.h"
 
 /*
 Protocol handshake:
@@ -35,20 +22,6 @@ AHOY-HOY:[random access token]
 
 The client must store the token and include it in subsequent requests.
 */
-
-/*
-Structure of a message body is as follows:
-:token:nickname:this is the message text
-*/
-
-struct Message {
-    int token_offset;
-    int token_length;
-    int nick_offset;
-    int nick_length;
-    int message_offset;
-    int message_length;
-};
 
 /*
  * Generate an access token for the client
@@ -122,41 +95,14 @@ char **parse_message(char *message, int length) {
     return tokens;
 }
 
-/*
- * Write message into chat log file
- */
-int command_write(char *message) {
-    FILE *fp;
-    /* open file pointer */
-    fp = fopen("chat.txt", "a+");
-    /* append message to file */
-    fputs(message, fp);
-    fputs("\n", fp);
-    /* close file pointer */
-    fclose(fp);
-
-    return 0;
-}
-
-/*
- * Display chat log
- */
-int command_history(int socket) {
-    FILE *fp;
-    char *header;
-    char buffer[1024];
-
-    header = "Chat history:\n-------------\n";
-
-    /* Open file pointer */
-    fp = fopen("chat.txt", "r");
-    /* Read file into buffer */
-    fread(buffer, sizeof(buffer), 1, fp);
-    /* send header into socket */
-    send(socket, header, strlen(header), 0);
-    /* send buffer into socket */
-    send(socket, buffer, strlen(buffer), 0);
-    return 0;
+int open_client_socket(int server_socket) {
+    int client_socket;
+    client_socket = accept(server_socket, NULL, NULL);
+    if (client_socket < 0) {
+        printf("Unable to accept coonection on socket\n");
+        exit(1);
+    }
+    return client_socket;
 }
 
 int main() {
@@ -207,16 +153,12 @@ int main() {
     input = malloc(MAX_MSG);
 
     printf("Waiting for connection\n");
-    client_socket = accept(server_socket, NULL, NULL);
-    if (client_socket < 0) {
-        printf("Unable to accept coonection on socket\n");
-        exit(1);
-    }
+
+    client_socket = open_client_socket(server_socket);
     printf("Accepted socket\n");
 
     /* Accept requests until interrupted */
     while (1) {
-        printf("while(1)\n");
         /* Read input */
         len = recv(client_socket, input, MAX_MSG, 0);
 
@@ -227,6 +169,7 @@ int main() {
             /* close client socket if received nothing */
             printf("Transmission complete. Close socket.\n");
             close(client_socket);
+            client_socket = open_client_socket(server_socket);
             continue;
         }
 

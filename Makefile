@@ -18,5 +18,5 @@ $(SRC_DIR):
 $(BIN_DIR)/client: $(SRC_DIR)/client.c
 	$(CC) -o $(BIN_DIR)/client $(SRC_DIR)/client.c
 
-$(BIN_DIR)/server: $(SRC_DIR)/server.c
-	$(CC) -o $(BIN_DIR)/server $(SRC_DIR)/server.c
+$(BIN_DIR)/server: $(SRC_DIR)/server.c $(SRC_DIR)/server_commands.c
+	$(CC) -o $(BIN_DIR)/server $(SRC_DIR)/server.c $(SRC_DIR)/server_commands.c
