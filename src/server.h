@@ -11,16 +11,3 @@ enum cmd_type {
     CMD_WRITE = 2,
     CMD_CLEAR = 4,
 };
-
-/*
-Structure of a message body is as follows:
-:token:nickname:this is the message text
-*/
-struct Message {
-    int token_offset;
-    int token_length;
-    int nick_offset;
-    int nick_length;
-    int message_offset;
-    int message_length;
-};

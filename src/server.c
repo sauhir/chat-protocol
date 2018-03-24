@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 
 #include "chat.h"
+#include "chat_message.h"
 #include "server.h"
 #include "server_commands.h"
 
@@ -27,8 +28,22 @@ The client must store the token and include it in subsequent requests.
  * Generate an access token for the client
  */
 char *create_token(char *token, size_t size) {
-    token = "12345678";
-    return token;
+    static char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+    char *random_string = NULL;
+
+    random_string = calloc((size + 1), sizeof(char));
+
+    if (random_string) {
+        for (int n = 0; n < size; n++) {
+            int key = rand() % (int)(sizeof(charset) - 1);
+            random_string[n] = charset[key];
+        }
+
+        random_string[size] = '\0';
+    }
+
+    token = random_string;
+    return random_string;
 }
 
 /*
@@ -41,9 +56,9 @@ int handshake(int socket) {
     char *buf;
     size_t len;
 
-    token = malloc(9);
+    token = (char *)calloc(9, sizeof(char));
     len = snprintf(NULL, 0, "AHOY-HOY:%s", create_token(token, 8));
-    buf = (char *)malloc(len + 1);
+    buf = (char *)calloc(len + 1, sizeof(char));
     memset(buf, 0, len + 1);
     snprintf(buf, len + 1, "AHOY-HOY:%s", create_token(token, 8));
     printf("buf:%s\n", buf);
@@ -57,14 +72,15 @@ int handshake(int socket) {
  * Splits message into tokens delimited by colon (:)
  * Returns tokenized pointer array.
  */
-char **parse_message(char *message, int length) {
+chatMessage *parse_message(char *message) {
     char **tokens;
     char *token;
     char *tmp = message;
     int c;
+    int length;
     size_t count = 0;
-    /* Parse the message and determine its type */
-    printf("parse_message()\n");
+
+    length = sizeof(message);
 
     if (length == 0) {
         /* Empty string */
@@ -78,21 +94,33 @@ char **parse_message(char *message, int length) {
         tmp++;
     }
 
-    tokens = malloc(sizeof(char *) * count);
+    tokens = calloc(count, sizeof(char *));
 
     c = 0;
     /* get the first token */
     token = strtok(message, ":");
 
+    chatMessage *msg = malloc(sizeof(chatMessage));
+
     while (token != NULL) {
         printf("%d: %s\n", c, token);
         /* duplicate token into tokens */
-        *(tokens + c++) = strdup(token);
+        switch (c) {
+        case 0:
+            msg->token = strdup(token);
+            break;
+        case 1:
+            msg->nickname = strdup(token);
+            break;
+        case 2:
+            msg->message = strdup(token);
+            break;
+        }
         c++;
         token = strtok(NULL, ":");
     }
 
-    return tokens;
+    return msg;
 }
 
 int open_client_socket(int server_socket) {
@@ -112,8 +140,6 @@ int main() {
     int client_socket;                 /* socket used for receiving */
     int status;                        /* status code for function returns */
     ssize_t len;                       /* string length */
-    int input_len;                     /* string length */
-    char **message;
 
     /* Create the socket */
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -150,7 +176,7 @@ int main() {
     printf("Started listening\n");
 
     /* allocate memory for input */
-    input = malloc(MAX_MSG);
+    input = calloc(MAX_MSG, sizeof(char));
 
     printf("Waiting for connection\n");
 
@@ -175,18 +201,15 @@ int main() {
 
         printf("input:\n%s\n", input);
 
-        /* Store the length of the input string */
-        input_len = strlen(input);
-
         /* Check if input is a handshake initiation */
         if (strcmp(input, "AHOY") == 0) {
             handshake(client_socket);
             continue;
         }
 
-        message = parse_message(input, input_len);
+        chatMessage *message = parse_message(input);
 
-        printf("message[0]: %s\n", message[0]);
+        printf("<%s> %s\n", message->nickname, message->message);
         command_write(input);
         send(client_socket, "foo", strlen("foo"), 0);
         printf("Response sent\n");

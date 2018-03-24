@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 
 #include "chat.h"
+#include "chat_message.h"
 #include "client.h"
 
 int printtime() {
@@ -25,14 +26,14 @@ int printtime() {
     return 0;
 }
 
-chat_session *create_session() {
-    chat_session *session = calloc(1, sizeof(chat_session));
+chatSession *create_session() {
+    chatSession *session = calloc(1, sizeof(chatSession));
     session->token = "";
-    session->nick = "";
+    session->nickname = "";
     return session;
 }
 
-int handshake(int socket, chat_session *session) {
+int handshake(int socket, chatSession *session) {
     char response[MAX_MSG];
     char *part;
 
@@ -52,8 +53,10 @@ int handshake(int socket, chat_session *session) {
         printf("Correct response received\n");
         /* Response correct, get token */
         part = strtok(NULL, ":");
-        printf("Authentication token: %s\n", part);
-        session->token = part;
+        char *token = calloc(1, sizeof(part));
+        strcpy(token, part);
+        session->token = token;
+        printf("Authentication token: %s\n", session->token);
     } else {
         return -1;
     }
@@ -63,13 +66,12 @@ int handshake(int socket, chat_session *session) {
 /*
  * Prompt for nickname and store it into the session.
  */
-int set_nickname(chat_session *session) {
-    /**/
+int set_nickname(chatSession *session) {
     char *nick;
     nick = calloc(MAX_NICK, sizeof(char));
     printf("Select a nickname:\n");
     scanf(" %99[^\n]", nick);
-    session->nick = nick;
+    session->nickname = nick;
     return 0;
 }
 
@@ -79,7 +81,7 @@ int main() {
     int status;
     ssize_t len;
 
-    chat_session *session;
+    chatSession *session;
 
     char *server_response;
     char *input;
@@ -131,10 +133,17 @@ int main() {
            in the input string. */
         scanf(" %99[^\n]", input);
 
-        printf("<%s> %s\n", session->nick, input);
+        chatMessage *message = malloc(sizeof(chatMessage));
+        message->token = session->token;
+        message->nickname = session->nickname;
+        message->message = input;
+
+        char *msg_str = format_message(message);
+
+        // printf("%s\n", msg_str);
 
         /* Send message to server */
-        len = send(network_socket, input, MAX_MSG, 0);
+        len = send(network_socket, msg_str, MAX_MSG, 0);
         printf("sent %ld bytes\n", len);
 
         /* Get response from server */
