@@ -47,8 +47,6 @@ char *format_message(chatMessage *message) {
 chatMessage *parse_message(char *message) {
     char *ptr_start;
     char *ptr_end;
-    int c;
-    size_t count = 0;
     int len;
 
     if (strlen(message) == 0) {
