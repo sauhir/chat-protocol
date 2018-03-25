@@ -140,7 +140,8 @@ int main() {
     /* Accept requests until interrupted */
     while (1) {
         if (counter++ % 100 == 5) {
-            send(client_socket, "::server:test", strlen("::server:test"), 0);
+            send(client_socket, "::server:test\3", strlen("::server:test\3"),
+                 0);
         }
 
         /* Read input */

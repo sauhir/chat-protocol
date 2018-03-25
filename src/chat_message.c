@@ -25,8 +25,8 @@
 #include "chat_message.h"
 
 char *format_message(chatMessage *message) {
-    size_t msg_size = sizeof(message->token) + sizeof(message->nickname) +
-                      sizeof(message->message) + 3;
+    size_t msg_size = strlen(message->token) + strlen(message->nickname) +
+                      strlen(message->message) + 4;
 
     char *message_str = calloc(msg_size, sizeof(char));
     /* Concatenate the message components into a colon-delimited string */
@@ -36,6 +36,7 @@ char *format_message(chatMessage *message) {
     strcat(message_str, message->nickname);
     strcat(message_str, ":");
     strcat(message_str, message->message);
+    strcat(message_str, "\3");
     return message_str;
 }
 
@@ -84,7 +85,8 @@ chatMessage *parse_message(char *message) {
      * Parse message
      */
     ptr_start = ptr_end + 1;
-    len = strlen(ptr_start); /* Message can be read until end of string */
+    ptr_end = strchr(ptr_start + 1, '\3'); /* Find ETX character */
+    len = ptr_end - ptr_start;
 
     char *message_str = calloc(1, len + 1);
     memcpy(message_str, ptr_start, len);
