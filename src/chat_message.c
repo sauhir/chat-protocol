@@ -64,19 +64,24 @@ chatMessage *parse_message(char *message) {
 
     while (token != NULL) {
         // printf("%d: %s\n", c, token);
-        switch (c) {
+        switch (c++) {
         case 0:
             msg->token = strdup(token);
+            token = strtok(NULL, ":");
             break;
         case 1:
             msg->nickname = strdup(token);
+            /* Use an ACK ascii code as tokenizer so that we never find it.
+             * This causes the next token to be the whole remaining string */
+            token = strtok(NULL, "\6");
             break;
         case 2:
             msg->message = strdup(token);
             break;
         }
-        c++;
-        token = strtok(NULL, ":");
+        if (c > 2) {
+            break;
+        }
     }
 
     return msg;
