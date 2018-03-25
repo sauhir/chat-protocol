@@ -64,6 +64,9 @@ int handshake(int socket) {
     return 0;
 }
 
+/*
+ * Open client socket connection
+ */
 int open_client_socket(int server_socket) {
     int client_socket;
     client_socket = accept(server_socket, NULL, NULL);
@@ -74,13 +77,14 @@ int open_client_socket(int server_socket) {
     return client_socket;
 }
 
-int main() {
-    char *input;                       /* socket input message */
+/*
+ * Bind server socket and start listening
+ * Returns the socket
+ */
+int init_server_socket() {
     struct sockaddr_in server_address; /* server socket parameters */
     int server_socket;                 /* socket for sending */
-    int client_socket;                 /* socket used for receiving */
     int status;                        /* status code for function returns */
-    ssize_t len;                       /* string length */
 
     /* Create the socket */
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -113,11 +117,20 @@ int main() {
         printf("Error listening socket\n");
         exit(1);
     }
-
     printf("Started listening\n");
+    return server_socket;
+}
+
+int main() {
+    char *input;       /* socket input message */
+    int server_socket; /* socket for sending */
+    int client_socket; /* socket used for receiving */
+    ssize_t len;       /* string length */
 
     /* allocate memory for input */
     input = calloc(MAX_MSG, sizeof(char));
+
+    server_socket = init_server_socket();
 
     printf("Waiting for connection\n");
 
@@ -140,25 +153,25 @@ int main() {
             continue;
         }
 
-        printf("input:\n%s\n", input);
-
         /* Check if input is a handshake initiation */
         if (strcmp(input, "AHOY") == 0) {
             handshake(client_socket);
             continue;
         }
 
+        /* Write input to chat log */
         command_write(input);
-        char *tokenizable = strdup(input);
 
-        chatMessage *message = parse_message(tokenizable);
+        /* Parse message if input begins with colon */
+        if (input[0] == ':') {
+            char *tokenizable = strdup(input);
+            chatMessage *message = parse_message(tokenizable);
+            printf("<%s> %s\n", message->nickname, message->message);
 
-        printf("<%s> %s\n", message->nickname, message->message);
-
-        message->token = ""; /* Clear the token from the message */
-        char *formatted_msg = format_message(message);
-        send(client_socket, formatted_msg, strlen(formatted_msg), 0);
-        printf("Response sent\n");
+            message->token = ""; /* Clear the token from the message */
+            char *formatted_msg = format_message(message);
+            send(client_socket, formatted_msg, strlen(formatted_msg), 0);
+        }
 
         /* Clear the input array */
         memset(input, 0, MAX_MSG);

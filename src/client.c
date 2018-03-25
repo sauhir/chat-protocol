@@ -51,10 +51,10 @@ int handshake(int socket, chatSession *session) {
 
     /* send greeting */
     send(socket, "AHOY", MAX_MSG, 0);
-    /* receive response */
     printtime();
     printf("Greeting sent\n");
 
+    /* receive response */
     recv(socket, response, MAX_MSG, 0);
 
     /* get first part of response */
