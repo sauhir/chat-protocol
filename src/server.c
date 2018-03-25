@@ -31,6 +31,7 @@
 #include "chat_message.h"
 #include "server.h"
 #include "server_commands.h"
+#include "session.h"
 
 /*
 Protocol handshake:
@@ -153,7 +154,10 @@ int main() {
         chatMessage *message = parse_message(tokenizable);
 
         printf("<%s> %s\n", message->nickname, message->message);
-        send(client_socket, input, strlen(input), 0);
+
+        message->token = ""; /* Clear the token from the message */
+        char *formatted_msg = format_message(message);
+        send(client_socket, formatted_msg, strlen(formatted_msg), 0);
         printf("Response sent\n");
 
         /* Clear the input array */

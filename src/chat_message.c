@@ -45,60 +45,52 @@ char *format_message(chatMessage *message) {
  * Returns tokenized pointer array.
  */
 chatMessage *parse_message(char *message) {
-    char **tokens;
-    char *token;
-    char *tmp = message;
+    char *ptr_start;
+    char *ptr_end;
     int c;
-    int length;
     size_t count = 0;
+    int len;
 
-    length = sizeof(message);
-
-    if (length == 0) {
+    if (strlen(message) == 0) {
         /* Empty string */
         return NULL;
     }
 
-    while (*tmp) {
-        if (strcmp(tmp, ":") == 0) {
-            count++;
-        }
-        tmp++;
-    }
-
-    tokens = calloc(count, sizeof(char *));
-
-    c = 0;
-    /* get the first token */
-    token = strtok(message, ":");
-
     chatMessage *msg = malloc(sizeof(chatMessage));
 
-    /* Initialize message with empty values in case we cannot get all tokens */
-    msg->token = "";
-    msg->nickname = "";
-    msg->message = "";
+    /*
+     * Parse access token
+     */
+    ptr_start = message + 1;            /* Skip over the colon */
+    ptr_end = strchr(message + 1, ':'); /* Find next colon */
 
-    while (token != NULL) {
-        switch (c++) {
-        case 0:
-            msg->token = strdup(token);
-            token = strtok(NULL, ":");
-            break;
-        case 1:
-            msg->nickname = strdup(token);
-            /* Use an ACK ascii code as tokenizer so that we never find it.
-             * This causes the next token to be the whole remaining string */
-            token = strtok(NULL, "\6");
-            break;
-        case 2:
-            msg->message = strdup(token);
-            break;
-        }
-        if (c > 2) {
-            break;
-        }
-    }
+    len = ptr_end - ptr_start;
 
+    char *token = calloc(1, len + 1); /* Allocate memory for the string */
+    memcpy(token, ptr_start, len);    /* Copy the string */
+    msg->token = token;
+
+    /*
+     * Parse nickname
+     */
+    ptr_start = ptr_end + 1;
+    ptr_end = strchr(ptr_start + 1, ':');
+
+    len = ptr_end - ptr_start;
+
+    char *nickname = calloc(1, len + 1);
+    memcpy(nickname, ptr_start, len);
+    msg->nickname = nickname;
+
+    /*
+     * Parse message
+     */
+    ptr_start = ptr_end + 1;
+    len = strlen(ptr_start); /* Message can be read until end of string */
+
+    char *message_str = calloc(1, len + 1);
+    memcpy(message_str, ptr_start, len);
+
+    msg->message = message_str;
     return msg;
 }

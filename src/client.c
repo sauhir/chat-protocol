@@ -31,6 +31,7 @@
 #include "chat.h"
 #include "chat_message.h"
 #include "client.h"
+#include "session.h"
 
 int printtime() {
     time_t rawtime;
