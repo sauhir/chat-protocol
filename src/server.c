@@ -51,7 +51,7 @@ char *create_token(char *token, size_t size) {
  */
 int handshake(int socket) {
     printf("handshake()\n");
-    /* */
+
     char *token;
     char *buf;
     size_t len;

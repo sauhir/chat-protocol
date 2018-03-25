@@ -12,7 +12,7 @@ char *format_message(chatMessage *message) {
                       sizeof(message->message) + 3;
 
     char *message_str = calloc(msg_size, sizeof(char));
-    // Concatenate the message components into a colon-delimited string
+    /* Concatenate the message components into a colon-delimited string */
     strcat(message_str, ":");
     strcat(message_str, message->token);
     strcat(message_str, ":");
@@ -63,7 +63,6 @@ chatMessage *parse_message(char *message) {
     msg->message = "";
 
     while (token != NULL) {
-        // printf("%d: %s\n", c, token);
         switch (c++) {
         case 0:
             msg->token = strdup(token);

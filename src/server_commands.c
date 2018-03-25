@@ -14,13 +14,9 @@ int command_history(int socket) {
 
     header = "Chat history:\n-------------\n";
 
-    /* Open file pointer */
     fp = fopen("chat.txt", "r");
-    /* Read file into buffer */
     fread(buffer, sizeof(buffer), 1, fp);
-    /* send header into socket */
     send(socket, header, strlen(header), 0);
-    /* send buffer into socket */
     send(socket, buffer, strlen(buffer), 0);
     return 0;
 }
@@ -30,12 +26,9 @@ int command_history(int socket) {
  */
 int command_write(char *message) {
     FILE *fp;
-    /* open file pointer */
     fp = fopen("chat.txt", "a+");
-    /* append message to file */
     fputs(message, fp);
     fputs("\n", fp);
-    /* close file pointer */
     fclose(fp);
 
     return 0;
