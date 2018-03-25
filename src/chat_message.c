@@ -26,7 +26,8 @@
 
 char *format_message(chatMessage *message) {
     size_t msg_size = strlen(message->token) + strlen(message->nickname) +
-                      strlen(message->message) + 4;
+                      strlen(message->message) +
+                      4; /* 4 = 3 colons and end marker */
 
     char *message_str = calloc(msg_size, sizeof(char));
     /* Concatenate the message components into a colon-delimited string */
