@@ -80,9 +80,19 @@ int handshake(int socket, chatSession *session) {
  */
 int set_nickname(chatSession *session) {
     char *nick;
+    int i;
+
     nick = calloc(MAX_NICK, sizeof(char));
     printf("Select a nickname:\n");
     scanf(" %99[^\n]", nick);
+
+    /* Replace colons with underscore in nickname */
+    for (i = 0; i < strlen(nick); i++) {
+        if (nick[i] == ':') {
+            nick[i] = '_';
+        }
+    }
+
     session->nickname = nick;
     return 0;
 }
