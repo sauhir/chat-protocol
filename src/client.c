@@ -44,13 +44,6 @@ int printtime() {
     return 0;
 }
 
-chatSession *create_session() {
-    chatSession *session = calloc(1, sizeof(chatSession));
-    session->token = "";
-    session->nickname = "";
-    return session;
-}
-
 int handshake(int socket, chatSession *session) {
     char response[MAX_MSG];
     char *part;

@@ -1,8 +1,4 @@
 
-#define MAX_MSG 512
+#include "session.h"
 
-/* Chat session structure */
-typedef struct _chatSession {
-    char *nickname; /* User's nickname */
-    char *token;    /* Session token used for simple authentication */
-} chatSession;
+#define MAX_MSG 512 /* Maximum length of a chat message */

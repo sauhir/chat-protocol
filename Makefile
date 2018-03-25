@@ -15,9 +15,9 @@ $(BIN_DIR):
 $(SRC_DIR):
 	$(MKDIR_P) $(SRC_DIR)
 
-$(BIN_DIR)/client: $(SRC_DIR)/client.c $(SRC_DIR)/chat_message.c
-	$(CC) -o $(BIN_DIR)/client $(SRC_DIR)/client.c $(SRC_DIR)/chat_message.c
+$(BIN_DIR)/client: $(SRC_DIR)/client.c $(SRC_DIR)/chat_message.c $(SRC_DIR)/session.c
+	$(CC) -o $(BIN_DIR)/client $(SRC_DIR)/client.c $(SRC_DIR)/chat_message.c $(SRC_DIR)/session.c
 
-$(BIN_DIR)/server: $(SRC_DIR)/server.c $(SRC_DIR)/server_commands.c $(SRC_DIR)/chat_message.c
+$(BIN_DIR)/server: $(SRC_DIR)/server.c $(SRC_DIR)/server_commands.c $(SRC_DIR)/chat_message.c $(SRC_DIR)/session.c
 	$(CC) -o $(BIN_DIR)/server \
-	$(SRC_DIR)/server.c $(SRC_DIR)/server_commands.c $(SRC_DIR)/chat_message.c
+	$(SRC_DIR)/server.c $(SRC_DIR)/server_commands.c $(SRC_DIR)/chat_message.c $(SRC_DIR)/session.c

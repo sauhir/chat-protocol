@@ -43,28 +43,6 @@ The client must store the token and include it in subsequent requests.
 */
 
 /*
- * Generate an access token for the client
- */
-char *create_token(char *token, size_t size) {
-    static char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
-    char *random_string = NULL;
-
-    random_string = calloc((size + 1), sizeof(char));
-
-    if (random_string) {
-        for (int n = 0; n < size; n++) {
-            int key = rand() % (int)(sizeof(charset) - 1);
-            random_string[n] = charset[key];
-        }
-
-        random_string[size] = '\0';
-    }
-
-    token = random_string;
-    return random_string;
-}
-
-/*
  * Send handshake response.
  */
 int handshake(int socket) {
