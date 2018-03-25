@@ -1,4 +1,4 @@
-/* Chat session
+/* Chat session structure and related functionality.
  *
  * Copyright (C) 2018 Sauli Hirvi
  *
@@ -17,6 +17,7 @@
  */
 
 #include <stdlib.h>
+#include <time.h>
 
 #include "session.h"
 
@@ -30,6 +31,7 @@ char *create_token(char *token, size_t size) {
     random_string = calloc((size + 1), sizeof(char));
 
     if (random_string) {
+        srand(time(NULL));
         for (int n = 0; n < size; n++) {
             int key = rand() % (int)(sizeof(charset) - 1);
             random_string[n] = charset[key];
