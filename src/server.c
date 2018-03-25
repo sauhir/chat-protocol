@@ -177,6 +177,9 @@ int main() {
         printf("<%s> %s\n", message->nickname, message->message);
         send(client_socket, input, strlen(input), 0);
         printf("Response sent\n");
+
+        /* Clear the input array */
+        memset(input, 0, MAX_MSG);
     }
 
     /* free memory for input */

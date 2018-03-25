@@ -170,9 +170,9 @@ int main() {
         printtime();
         printf("<%s> %s\n", msg->nickname, msg->message);
 
-        server_response = malloc(MAX_MSG);
-        free(input);
-        input = calloc(MAX_MSG, sizeof(char));
+        /* Clear the arrays */
+        memset(server_response, 0, MAX_MSG);
+        memset(input, 0, MAX_MSG);
     }
 
     free(input);
