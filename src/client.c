@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <curses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,14 +34,24 @@
 #include "client.h"
 #include "session.h"
 
+static volatile int keepRunning = 1;
+
+static WINDOW *mainwindow;
+static WINDOW *inputwindow;
+
+void intHandler(__attribute__((unused)) int dummy) {
+    wprintw(mainwindow, "interrupt!");
+    keepRunning = 0;
+}
+
 int printtime() {
     time_t rawtime;
     struct tm *timeinfo;
 
     time(&rawtime);
     timeinfo = localtime(&rawtime);
-    printf("[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min,
-           timeinfo->tm_sec);
+    wprintw(mainwindow, "[%02d:%02d:%02d] ", timeinfo->tm_hour,
+            timeinfo->tm_min, timeinfo->tm_sec);
 
     return 0;
 }
@@ -54,7 +65,7 @@ int handshake(int socket, chatSession *session) {
     /* send greeting */
     send(socket, "AHOY", MAX_MSG, 0);
     printtime();
-    printf("Greeting sent\n");
+    wprintw(mainwindow, "Greeting sent\n");
 
     /* receive response */
     recv(socket, response, MAX_MSG, 0);
@@ -64,13 +75,13 @@ int handshake(int socket, chatSession *session) {
 
     if (strcmp(part, "AHOY-HOY") == 0) {
         printtime();
-        printf("Correct response received\n");
+        wprintw(mainwindow, "Correct response received\n");
         /* Response correct, get token */
         part = strtok(NULL, ":");
         char *token = calloc(1, strlen(part));
         strcpy(token, part);
         session->token = token;
-        printf("Authentication token: %s\n", session->token);
+        wprintw(mainwindow, "Authentication token: %s\n", session->token);
     } else {
         return -1;
     }
@@ -82,11 +93,11 @@ int handshake(int socket, chatSession *session) {
  */
 int set_nickname(chatSession *session) {
     char *nick;
-    int i;
+    unsigned int i;
 
     nick = calloc(MAX_NICK, sizeof(char));
-    printf("Select a nickname:\n");
-    scanf(" %99[^\n]", nick);
+    wprintw(inputwindow, "Select a nickname:\n");
+    wscanw(inputwindow, " %99[^\n]", nick);
 
     /* Replace colons with underscore in nickname */
     for (i = 0; i < strlen(nick); i++) {
@@ -99,16 +110,10 @@ int set_nickname(chatSession *session) {
     return 0;
 }
 
-int main() {
+int init_socket() {
     struct sockaddr_in server_address;
     int network_socket;
     int status;
-    ssize_t len;
-
-    chatSession *session;
-
-    char *server_response;
-    char *input;
 
     /* Create a socket */
     network_socket = socket(AF_INET, SOCK_STREAM, 0);
@@ -124,62 +129,126 @@ int main() {
 
     /* Check for connection error */
     if (status == -1) {
-        printf("There was an error connecting to the remote socket.\n\n");
+        wprintw(mainwindow,
+                "There was an error connecting to the remote socket.\n\n");
+        endwin();
         exit(1);
     }
+    return network_socket;
+}
+
+/*
+ * Create and return a new curses window
+ */
+WINDOW *create_newwin(int height, int width, int starty, int startx) {
+    WINDOW *local_win;
+    local_win = newwin(height, width, starty, startx);
+    wrefresh(local_win);
+    return local_win;
+}
+
+int main() {
+    int network_socket;
+    int status;
+    char *server_response;
+    char *input;
+    ssize_t len;
+    chatSession *session;
+
+    char *input_buffer;
+    int input_pos = 0;
+
+    /* Add interrupt handler to catch CTRL-C */
+    signal(SIGINT, intHandler);
+
+    initscr();
+
+    mainwindow = create_newwin(LINES - 3, COLS, 0, 0);
+    inputwindow = create_newwin(3, COLS, LINES - 3, 0);
+
+    wprintw(mainwindow, "Main window initialized.\n");
+    wprintw(inputwindow, "Input window initialized.\n");
+
+    network_socket = init_socket();
 
     /* Initialize the session variable */
     session = create_session();
 
     printtime();
-    printf("Connected to the server\n");
+    wprintw(mainwindow, "Connected to the server\n");
 
     server_response = calloc(MAX_MSG, sizeof(char));
     input = calloc(MAX_MSG, sizeof(char));
+    input_buffer = calloc(MAX_MSG, sizeof(char));
 
     /* Shake hands with the server */
     status = handshake(network_socket, session);
     if (status == -1) {
-        printtime();
-        printf("Handshake failed.\n");
+        wprintw(mainwindow, "Handshake failed.\n");
+        endwin();
         exit(1);
     }
 
     /* Select nick for user */
     set_nickname(session);
 
+    /* Set curses options */
+    nodelay(inputwindow, TRUE);
+    noecho();
+    scrollok(mainwindow, TRUE);
+    scrollok(inputwindow, TRUE);
+
+    wclear(inputwindow);
+    wprintw(inputwindow, "CHAT >> ");
+
     /* Main loop */
-    while (1) {
-        printf("Say something:\n");
+    while (keepRunning) {
+        wrefresh(mainwindow);
+        wrefresh(inputwindow);
 
-        /* Read from stdin until newline.
-           Regular plain scanf call would include the newline character
-           in the input string. */
-        scanf(" %99[^\n]", input);
+        int c = wgetch(inputwindow);
+        if (c == 13 || c == 10) { /* Newline */
+            /* Handle submit */
+            chatMessage *message = malloc(sizeof(chatMessage));
+            message->token = session->token;
+            message->nickname = session->nickname;
+            message->message = input_buffer;
 
-        chatMessage *message = malloc(sizeof(chatMessage));
-        message->token = session->token;
-        message->nickname = session->nickname;
-        message->message = input;
+            char *msg_str = format_message(message);
 
-        char *msg_str = format_message(message);
+            /* Send message to server */
+            len = send(network_socket, msg_str, MAX_MSG, 0);
 
-        /* Send message to server */
-        len = send(network_socket, msg_str, MAX_MSG, 0);
+            memset(input_buffer, 0, MAX_MSG);
+            input_pos = 0;
+            wclear(inputwindow);
+            wprintw(inputwindow, "CHAT >> ");
+
+        } else if (c >= 32) {
+            wprintw(inputwindow, "%c", c);
+            input_buffer[input_pos++] = c;
+        }
 
         /* Get response from server */
-        len = recv(network_socket, server_response, MAX_MSG, 0);
+        len = recv(network_socket, server_response, MAX_MSG, MSG_DONTWAIT);
+
+        if (len < 0) {
+            usleep(10000);
+            continue;
+        }
 
         chatMessage *msg = parse_message(server_response);
 
         /* Print out the response */
         printtime();
-        printf("<%s> %s\n", msg->nickname, msg->message);
+        wprintw(mainwindow, "<%s> %s\n", msg->nickname, msg->message);
 
         /* Clear the arrays */
         memset(server_response, 0, MAX_MSG);
         memset(input, 0, MAX_MSG);
     }
+
+    endwin();
 
     free(input);
     /* Close the socket */

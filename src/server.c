@@ -135,14 +135,20 @@ int main() {
     client_socket = open_client_socket(server_socket);
     printf("Client connected\n");
 
+    int counter = 0;
+
     /* Accept requests until interrupted */
     while (1) {
+        if (counter++ % 100 == 5) {
+            send(client_socket, "::server:test", strlen("::server:test"), 0);
+        }
+
         /* Read input */
-        len = recv(client_socket, input, MAX_MSG, 0);
+        len = recv(client_socket, input, MAX_MSG, MSG_DONTWAIT);
 
         if (len < 0) {
-            printf("Connection error\n");
-            break;
+            usleep(10000);
+            continue;
         } else if (len == 0) {
             /* close client socket if received nothing */
             printf("Client disconnected.\n");

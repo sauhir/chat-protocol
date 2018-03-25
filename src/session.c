@@ -32,7 +32,7 @@ char *create_token(char *token, size_t size) {
 
     if (random_string) {
         srand(time(NULL));
-        for (int n = 0; n < size; n++) {
+        for (size_t n = 0; n < size; n++) {
             int key = rand() % (int)(sizeof(charset) - 1);
             random_string[n] = charset[key];
         }
@@ -44,6 +44,9 @@ char *create_token(char *token, size_t size) {
     return random_string;
 }
 
+/*
+ * Create stub session object.
+ */
 chatSession *create_session() {
     chatSession *session = calloc(1, sizeof(chatSession));
     session->token = "";
