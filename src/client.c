@@ -128,7 +128,7 @@ int main() {
     while (1) {
         printf("Say something:\n");
 
-        /* Read from stdin until newline
+        /* Read from stdin until newline.
            Regular plain scanf call would include the newline character
            in the input string. */
         scanf(" %99[^\n]", input);
@@ -140,15 +140,11 @@ int main() {
 
         char *msg_str = format_message(message);
 
-        // printf("%s\n", msg_str);
-
         /* Send message to server */
         len = send(network_socket, msg_str, MAX_MSG, 0);
-        // printf("sent %ld bytes\n", len);
 
         /* Get response from server */
         len = recv(network_socket, server_response, MAX_MSG, 0);
-        // printf("received %ld bytes\n", len);
 
         chatMessage *msg = parse_message(server_response);
 
