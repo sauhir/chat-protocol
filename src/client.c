@@ -46,8 +46,10 @@ int printtime() {
 }
 
 int handshake(int socket, chatSession *session) {
-    char response[MAX_MSG];
+    char *response;
     char *part;
+
+    response = calloc(1, MAX_MSG);
 
     /* send greeting */
     send(socket, "AHOY", MAX_MSG, 0);
@@ -65,7 +67,7 @@ int handshake(int socket, chatSession *session) {
         printf("Correct response received\n");
         /* Response correct, get token */
         part = strtok(NULL, ":");
-        char *token = calloc(1, sizeof(part));
+        char *token = calloc(1, strlen(part));
         strcpy(token, part);
         session->token = token;
         printf("Authentication token: %s\n", session->token);
