@@ -164,13 +164,12 @@ int main() {
             continue;
         }
 
-        /* Write input to chat log */
-        command_write(input);
-
         /* Parse message if input begins with colon */
         if (input[0] == ':') {
-            char *tokenizable = strdup(input);
-            chatMessage *message = parse_message(tokenizable);
+            /* Write input to chat log */
+            command_write(input);
+
+            chatMessage *message = parse_message(input);
             printf("<%s> %s\n", message->nickname, message->message);
 
             message->token = ""; /* Clear the token from the message */
