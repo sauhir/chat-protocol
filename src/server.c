@@ -47,8 +47,6 @@ The client must store the token and include it in subsequent requests.
  * Send handshake response.
  */
 int handshake(int socket) {
-    printf("handshake()\n");
-
     char *token;
     char *buf;
     size_t len;
@@ -58,8 +56,8 @@ int handshake(int socket) {
     buf = (char *)calloc(len + 1, sizeof(char));
     memset(buf, 0, len + 1);
     snprintf(buf, len + 1, "AHOY-HOY:%s", create_token(token, 8));
-    printf("buf:%s\n", buf);
 
+    printf("Send handshake response\n");
     send(socket, buf, strlen(buf), 0);
     return 0;
 }
@@ -135,7 +133,7 @@ int main() {
     printf("Waiting for connection\n");
 
     client_socket = open_client_socket(server_socket);
-    printf("Accepted socket\n");
+    printf("Client connected\n");
 
     /* Accept requests until interrupted */
     while (1) {
@@ -147,7 +145,7 @@ int main() {
             break;
         } else if (len == 0) {
             /* close client socket if received nothing */
-            printf("Transmission complete. Close socket.\n");
+            printf("Client disconnected.\n");
             close(client_socket);
             client_socket = open_client_socket(server_socket);
             continue;
@@ -177,7 +175,6 @@ int main() {
         memset(input, 0, MAX_MSG);
     }
 
-    /* free memory for input */
     free(input);
 
     /* Close the sockets */
