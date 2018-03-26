@@ -27,6 +27,10 @@
 
 char *msg_parse_token(char *param_ptr, char separator);
 
+/*
+ * Returns a formatted string according to protocol spec. E.g.
+ * :abcd1234:nickname:normal:This is a message
+ */
 char *format_message(chatMessage *message) {
     size_t msg_size = strlen(message->token) + strlen(message->nickname) +
                       strlen(message->message_type) + strlen(message->message) +
@@ -49,7 +53,8 @@ char *format_message(chatMessage *message) {
 /*
  * Parse message structure.
  * Splits message into tokens delimited by colon (:)
- * Returns tokenized pointer array.
+ * Returns a chatMessage struct.
+ * Returns NULL if an error occurred while parsing.
  */
 chatMessage *parse_message(char *message) {
     char *ptr_start;
