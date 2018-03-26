@@ -16,32 +16,30 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <arpa/inet.h>
 #include <curses.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-
 #include <sys/socket.h>
 #include <sys/types.h>
-
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "chat.h"
 #include "chat_message.h"
 #include "client.h"
 #include "session.h"
 
-static volatile int keepRunning = 1;
+static volatile int keep_running = 1;
 
 static WINDOW *mainwindow;
 static WINDOW *inputwindow;
 
 void intHandler(__attribute__((unused)) int dummy) {
     wprintw(mainwindow, "interrupt!");
-    keepRunning = 0;
+    keep_running = 0;
 }
 
 int printtime() {
@@ -202,7 +200,7 @@ int main() {
     wprintw(inputwindow, "CHAT >> ");
 
     /* Main loop */
-    while (keepRunning) {
+    while (keep_running) {
         wrefresh(mainwindow);
         wrefresh(inputwindow);
 

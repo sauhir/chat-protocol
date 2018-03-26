@@ -17,9 +17,11 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
 #include <sys/socket.h>
+
+#include "server_commands.h"
 
 /*
  * Display chat log
@@ -45,7 +47,6 @@ int command_write(char *message) {
     FILE *fp;
     fp = fopen("chat.txt", "a+");
     fputs(message, fp);
-    fputs("\n", fp);
     fclose(fp);
 
     return 0;

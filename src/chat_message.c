@@ -37,7 +37,7 @@ char *format_message(chatMessage *message) {
     strcat(message_str, message->nickname);
     strcat(message_str, ":");
     strcat(message_str, message->message);
-    strcat(message_str, "\3");
+    strcat(message_str, "\n");
     return message_str;
 }
 
@@ -86,7 +86,7 @@ chatMessage *parse_message(char *message) {
      * Parse message
      */
     ptr_start = ptr_end + 1;
-    ptr_end = strchr(ptr_start + 1, '\3'); /* Find ETX character */
+    ptr_end = strchr(ptr_start + 1, '\n'); /* Find ETX character */
     len = ptr_end - ptr_start;
 
     char *message_str = calloc(1, len + 1);

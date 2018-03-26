@@ -16,16 +16,14 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
-
 #include <sys/socket.h>
 #include <sys/types.h>
-
-#include <netinet/in.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "chat.h"
 #include "chat_message.h"
@@ -139,9 +137,9 @@ int main() {
 
     /* Accept requests until interrupted */
     while (1) {
-        if (counter++ % 100 == 5) {
-            send(client_socket, "::server:test\3", strlen("::server:test\3"),
-                 0);
+        if (counter++ % 500 == 5) {
+            send(client_socket, "::server:test\n", strlen("::server:test\n"),
+                  0);
         }
 
         /* Read input */
@@ -166,18 +164,15 @@ int main() {
 
         /* Parse message if input begins with colon */
         if (input[0] == ':') {
-            /* Write input to chat log */
             command_write(input);
-
             chatMessage *message = parse_message(input);
             printf("<%s> %s\n", message->nickname, message->message);
-
             message->token = ""; /* Clear the token from the message */
             char *formatted_msg = format_message(message);
             send(client_socket, formatted_msg, strlen(formatted_msg), 0);
         }
 
-        /* Clear the input array */
+        /* Clear the input */
         memset(input, 0, MAX_MSG);
     }
 

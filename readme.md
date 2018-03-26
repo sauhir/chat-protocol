@@ -33,9 +33,9 @@ The handshake is now complete and the client should store the access_token for u
 The message format is inspired by the IRC protocol and the format is as follows:
 
 ```
-:{access_token}:{nickname}:{message}{ETX}
+:{access_token}:{nickname}:{message}
 ```
-ETX is the ASCII character code 3 (end of text). An example message could be
+Newline character determines the end of a message. An example message could be
 
 ```
 :abcdef1234:hackerman:I'm gonna hack you!
