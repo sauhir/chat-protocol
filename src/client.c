@@ -146,6 +146,30 @@ WINDOW *create_newwin(int height, int width, int starty, int startx) {
     return local_win;
 }
 
+void send_message(chatSession *session, char *buffer, int network_socket) {
+    chatMessage *message = malloc(sizeof(chatMessage));
+    message->token = session->token;
+    message->nickname = session->nickname;
+    message->message_type = "normal";
+    message->message = buffer;
+
+    char *msg_str = format_message(message);
+
+    /* Send message to server */
+    send(network_socket, msg_str, MAX_MSG, 0);
+}
+
+/*
+ * Initialize curses windows
+ */
+void curses_init() {
+    initscr();
+    mainwindow = create_newwin(LINES - 3, COLS, 0, 0);
+    inputwindow = create_newwin(3, COLS, LINES - 3, 0);
+    scrollok(mainwindow, TRUE);
+    scrollok(inputwindow, TRUE);
+}
+
 int main() {
     int network_socket;
     int status;
@@ -153,20 +177,13 @@ int main() {
     char *input;
     ssize_t len;
     chatSession *session;
-
     char *input_buffer;
     int input_pos = 0;
 
+    curses_init();
+
     /* Add interrupt handler to catch CTRL-C */
     signal(SIGINT, intHandler);
-
-    initscr();
-
-    mainwindow = create_newwin(LINES - 3, COLS, 0, 0);
-    inputwindow = create_newwin(3, COLS, LINES - 3, 0);
-
-    wprintw(mainwindow, "Main window initialized.\n");
-    wprintw(inputwindow, "Input window initialized.\n");
 
     network_socket = init_socket();
 
@@ -191,11 +208,8 @@ int main() {
     /* Select nick for user */
     set_nickname(session);
 
-    /* Set curses options */
     nodelay(inputwindow, TRUE);
     noecho();
-    scrollok(mainwindow, TRUE);
-    scrollok(inputwindow, TRUE);
 
     wclear(inputwindow);
     wprintw(inputwindow, "CHAT >> ");
@@ -208,16 +222,7 @@ int main() {
         int c = wgetch(inputwindow);
         if (c == 13 || c == 10) { /* Newline */
             /* Handle submit */
-            chatMessage *message = malloc(sizeof(chatMessage));
-            message->token = session->token;
-            message->nickname = session->nickname;
-            message->message_type = "normal";
-            message->message = input_buffer;
-
-            char *msg_str = format_message(message);
-
-            /* Send message to server */
-            len = send(network_socket, msg_str, MAX_MSG, 0);
+            send_message(session, input_buffer, network_socket);
 
             memset(input_buffer, 0, MAX_MSG);
             input_pos = 0;

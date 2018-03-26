@@ -57,9 +57,6 @@ char *format_message(chatMessage *message) {
  * Returns NULL if an error occurred while parsing.
  */
 chatMessage *parse_message(char *message) {
-    char *ptr_start;
-    char *ptr_end;
-    int len;
 
     if (strlen(message) == 0) {
         /* Empty string */
