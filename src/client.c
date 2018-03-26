@@ -211,6 +211,7 @@ int main() {
             chatMessage *message = malloc(sizeof(chatMessage));
             message->token = session->token;
             message->nickname = session->nickname;
+            message->message_type = "normal";
             message->message = input_buffer;
 
             char *msg_str = format_message(message);

@@ -22,8 +22,9 @@
 /* Chat message */
 typedef struct _chatMessage {
     char *token;
-    char *nickname; /* Sender's nickname */
-    char *message;  /* Chat message contents */
+    char *nickname;     /* Sender's nickname */
+    char *message_type; /* Message type */
+    char *message;      /* Chat message contents */
 } chatMessage;
 
 char *format_message(chatMessage *message);
