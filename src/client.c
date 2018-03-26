@@ -239,9 +239,11 @@ int main() {
 
         chatMessage *msg = parse_message(server_response);
 
-        /* Print out the response */
-        printtime();
-        wprintw(mainwindow, "<%s> %s\n", msg->nickname, msg->message);
+        /* Print out if valid message */
+        if (msg != NULL) {
+            printtime();
+            wprintw(mainwindow, "<%s> %s\n", msg->nickname, msg->message);
+        }
 
         /* Clear the arrays */
         memset(server_response, 0, MAX_MSG);

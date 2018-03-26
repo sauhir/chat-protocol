@@ -23,6 +23,9 @@
 
 #include "chat.h"
 #include "chat_message.h"
+#include "error_log.h"
+
+char *msg_parse_token(char *param_ptr, char separator);
 
 char *format_message(chatMessage *message) {
     size_t msg_size = strlen(message->token) + strlen(message->nickname) +
@@ -60,52 +63,54 @@ chatMessage *parse_message(char *message) {
 
     chatMessage *msg = malloc(sizeof(chatMessage));
 
-    /*
-     * Parse access token
-     */
-    ptr_start = message + 1;            /* Skip over the colon */
-    ptr_end = strchr(message + 1, ':'); /* Find next colon */
-
-    len = ptr_end - ptr_start;
-
-    char *token = calloc(1, len + 1); /* Allocate memory for the string */
-    memcpy(token, ptr_start, len);    /* Copy the string */
-    msg->token = token;
-
-    /*
-     * Parse nickname
-     */
-    ptr_start = ptr_end + 1;
-    ptr_end = strchr(ptr_start + 1, ':');
-
-    len = ptr_end - ptr_start;
-
-    char *nickname = calloc(1, len + 1);
-    memcpy(nickname, ptr_start, len);
-    msg->nickname = nickname;
-
-    /*
-     * Parse message type
-     */
-    ptr_start = ptr_end + 1;
-    ptr_end = strchr(ptr_start + 1, ':');
-
-    len = ptr_end - ptr_start;
-
-    char *message_type = calloc(1, len + 1);
-    memcpy(message_type, ptr_start, len);
-    msg->message_type = message_type;
-
-    /*
-     * Parse message
-     */
-    ptr_start = ptr_end + 1;
-    ptr_end = strchr(ptr_start + 1, '\n'); /* Find ETX character */
-    len = ptr_end - ptr_start;
-
-    char *message_str = calloc(1, len + 1);
-    memcpy(message_str, ptr_start, len);
-
-    msg->message = message_str;
+    /* Parse access token */
+    if ((msg->token = msg_parse_token(message, ':')) == NULL) {
+        return NULL;
+    }
+    /* Parse nickname */
+    if ((msg->nickname = msg_parse_token(NULL, ':')) == NULL) {
+        return NULL;
+    }
+    /* Parse message type */
+    if ((msg->message_type = msg_parse_token(NULL, ':')) == NULL) {
+        return NULL;
+    }
+    /* Parse message */
+    if ((msg->message = msg_parse_token(NULL, '\n')) == NULL) {
+        return NULL;
+    }
     return msg;
+}
+
+/*
+ * Parse single token.
+ * Works similarly to strtok()
+ * You must provide the param_ptr on first call.
+ * Subsequent calls will be relative to that pointer.
+ */
+char *msg_parse_token(char *param_ptr, char separator) {
+    int len;
+    char *ptr_start;
+    static char *ptr_end = NULL;
+
+    if (ptr_end == NULL && param_ptr == NULL) {
+        return NULL;
+    }
+
+    if (param_ptr != NULL) {
+        ptr_end = param_ptr;
+    }
+
+    ptr_start = ptr_end + 1;
+    ptr_end = strchr(ptr_start, separator);
+
+    if (ptr_end == NULL) {
+        return NULL;
+    }
+
+    len = ptr_end - ptr_start;
+
+    char *output_str = calloc(1, len + 1);
+    memcpy(output_str, ptr_start, len);
+    return (output_str);
 }
