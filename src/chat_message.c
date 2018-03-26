@@ -26,8 +26,8 @@
 
 char *format_message(chatMessage *message) {
     size_t msg_size = strlen(message->token) + strlen(message->nickname) +
-                      strlen(message->message) +
-                      4; /* 4 = 3 colons and end marker */
+                      strlen(message->message) + strlen("normal") +
+                      5; /* 5 = 4 colons and newline */
 
     char *message_str = calloc(msg_size, sizeof(char));
     /* Concatenate the message components into a colon-delimited string */
@@ -35,6 +35,8 @@ char *format_message(chatMessage *message) {
     strcat(message_str, message->token);
     strcat(message_str, ":");
     strcat(message_str, message->nickname);
+    strcat(message_str, ":");
+    strcat(message_str, "normal"); /* Add hard-coded message type for now. */
     strcat(message_str, ":");
     strcat(message_str, message->message);
     strcat(message_str, "\n");
@@ -81,6 +83,15 @@ chatMessage *parse_message(char *message) {
     char *nickname = calloc(1, len + 1);
     memcpy(nickname, ptr_start, len);
     msg->nickname = nickname;
+
+    /*
+     * Parse message type
+     */
+    ptr_start = ptr_end + 1;
+    ptr_end = strchr(ptr_start + 1, ':');
+
+    len = ptr_end - ptr_start;
+    /* Do nothing with message_type at the moment */
 
     /*
      * Parse message

@@ -138,7 +138,7 @@ int main() {
     /* Accept requests until interrupted */
     while (1) {
         if (counter++ % 500 == 5) {
-            send(client_socket, "::server:test\n", strlen("::server:test\n"),
+            send(client_socket, "::server:normal:test\n", strlen("::server:normal:test\n"),
                   0);
         }
 

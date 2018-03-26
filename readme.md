@@ -30,15 +30,24 @@ The handshake is now complete and the client should store the access_token for u
 
 ### Message format
 
-The message format is inspired by the IRC protocol and the format is as follows:
+The message format is vaguely inspired by the IRC protocol and the format is as follows:
 
 ```
-:{access_token}:{nickname}:{message}
+:{access_token}:{nickname}:{message_type}:{message}
 ```
-Newline character determines the end of a message. An example message could be
+
+Newline character determines the end of a message. Regular chat messages have the message_type "normal". An example message could be
 
 ```
-:abcdef1234:hackerman:I'm gonna hack you!
+:abcdef1234:hackerman:normal:I'm gonna hack you!
+```
+
+### Command messages
+
+Commands have the message_type "command". Chat history could be requested with:
+
+```
+:abcdef1234:hackerman:command:history
 ```
 
 ## Compiling
