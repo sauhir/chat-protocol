@@ -2,3 +2,4 @@
 bin/
 *.o
 chat.txt
+error.log

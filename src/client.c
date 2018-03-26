@@ -30,6 +30,7 @@
 #include "chat.h"
 #include "chat_message.h"
 #include "client.h"
+#include "error_log.h"
 #include "session.h"
 
 static volatile int keep_running = 1;
