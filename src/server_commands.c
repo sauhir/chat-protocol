@@ -28,15 +28,34 @@
  */
 int command_history(int socket) {
     FILE *fp;
-    char *header;
-    char buffer[1024];
-
-    header = "Chat history:\n-------------\n";
+    int i;
+    /*
+        char *header;
+        int buffer_size;
+        char buffer[1024];
+    */
+    char str[80];
 
     fp = fopen("chat.txt", "r");
-    fread(buffer, sizeof(buffer), 1, fp);
-    send(socket, header, strlen(header), 0);
-    send(socket, buffer, strlen(buffer), 0);
+
+    for (i = 0; i < 5; ++i) {
+        fgets(str, 80, fp);
+        send(socket, str, strlen(str), 0);
+    }
+
+    fclose(fp);
+    /*
+        buffer_size = 10240;
+
+        buffer = calloc(buffer_size, sizeof(char));
+
+        header = "::server:Chat history:\3";
+
+        fp = fopen("chat.txt", "r");
+        fread(buffer, buffer_size, 1, fp);
+        send(socket, header, strlen(header), 0);
+        send(socket, buffer, strlen(buffer), 0);
+        */
     return 0;
 }
 

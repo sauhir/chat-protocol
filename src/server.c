@@ -122,6 +122,7 @@ int main() {
     int server_socket; /* socket for sending */
     int client_socket; /* socket used for receiving */
     ssize_t len;       /* string length */
+    int counter;
 
     /* allocate memory for input */
     input = calloc(MAX_MSG, sizeof(char));
@@ -133,10 +134,13 @@ int main() {
     client_socket = open_client_socket(server_socket);
     printf("Client connected\n");
 
-    int counter = 0;
+    counter = 0;
 
     /* Accept requests until interrupted */
     while (1) {
+        chatMessage *message;
+        char *formatted_msg;
+
         if (counter++ % 500 == 5) {
             send(client_socket, "::server:normal:test\n",
                  strlen("::server:normal:test\n"), 0);
@@ -165,10 +169,10 @@ int main() {
         /* Parse message if input begins with colon */
         if (input[0] == ':') {
             command_write(input);
-            chatMessage *message = parse_message(input);
+            message = parse_message(input);
             printf("<%s> %s\n", message->nickname, message->message);
             message->token = ""; /* Clear the token from the message */
-            char *formatted_msg = format_message(message);
+            formatted_msg = format_message(message);
             send(client_socket, formatted_msg, strlen(formatted_msg), 0);
         }
 

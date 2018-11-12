@@ -39,12 +39,13 @@ void log_error(const char *msg) {
  */
 void log_errorf(const char *msg, ...) {
     FILE *fp;
+    va_list args;
+
     fp = fopen("error.log", "a+");
     if (fp == NULL) {
         return;
     }
 
-    va_list args;
     va_start(args, msg);
     vfprintf(fp, msg, args);
     fprintf(fp, "\n");

@@ -57,13 +57,14 @@ char *format_message(chatMessage *message) {
  * Returns NULL if an error occurred while parsing.
  */
 chatMessage *parse_message(char *message) {
+    chatMessage *msg;
 
     if (strlen(message) == 0) {
         /* Empty string */
         return NULL;
     }
 
-    chatMessage *msg = malloc(sizeof(chatMessage));
+    msg = malloc(sizeof(chatMessage));
 
     /* Parse access token */
     if ((msg->token = msg_parse_token(message, ':')) == NULL) {
@@ -93,6 +94,7 @@ chatMessage *parse_message(char *message) {
 char *msg_parse_token(char *param_ptr, char separator) {
     int len;
     char *ptr_start;
+    char *output_str;
     static char *ptr_end = NULL;
 
     if (ptr_end == NULL && param_ptr == NULL) {
@@ -112,7 +114,7 @@ char *msg_parse_token(char *param_ptr, char separator) {
 
     len = ptr_end - ptr_start;
 
-    char *output_str = calloc(1, len + 1);
+    output_str = calloc(1, len + 1);
     memcpy(output_str, ptr_start, len);
     return (output_str);
 }

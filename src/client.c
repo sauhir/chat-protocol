@@ -58,6 +58,7 @@ int printtime() {
 int handshake(int socket, chatSession *session) {
     char *response;
     char *part;
+    char *token;
 
     response = calloc(1, MAX_MSG);
 
@@ -77,7 +78,7 @@ int handshake(int socket, chatSession *session) {
         wprintw(mainwindow, "Correct response received\n");
         /* Response correct, get token */
         part = strtok(NULL, ":");
-        char *token = calloc(1, strlen(part));
+        token = calloc(1, strlen(part));
         strcpy(token, part);
         session->token = token;
         wprintw(mainwindow, "Authentication token: %s\n", session->token);
@@ -147,13 +148,14 @@ WINDOW *create_newwin(int height, int width, int starty, int startx) {
 }
 
 void send_message(chatSession *session, char *buffer, int network_socket) {
+    char *msg_str;
     chatMessage *message = malloc(sizeof(chatMessage));
     message->token = session->token;
     message->nickname = session->nickname;
     message->message_type = "normal";
     message->message = buffer;
 
-    char *msg_str = format_message(message);
+    msg_str = format_message(message);
 
     /* Send message to server */
     send(network_socket, msg_str, MAX_MSG, 0);
@@ -216,10 +218,13 @@ int main() {
 
     /* Main loop */
     while (keep_running) {
+        int c;
+        chatMessage *msg;
+
         wrefresh(mainwindow);
         wrefresh(inputwindow);
 
-        int c = wgetch(inputwindow);
+        c = wgetch(inputwindow);
         if (c == 13 || c == 10) { /* Newline */
             /* Handle submit */
             send_message(session, input_buffer, network_socket);
@@ -242,7 +247,7 @@ int main() {
             continue;
         }
 
-        chatMessage *msg = parse_message(server_response);
+        msg = parse_message(server_response);
 
         /* Print out if valid message */
         if (msg != NULL) {

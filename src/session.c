@@ -27,12 +27,13 @@
 char *create_token(char *token, size_t size) {
     static char charset[] = "abcdefghijklmnopqrstuvwxyz0123456789";
     char *random_string = NULL;
+    size_t n;
 
     random_string = calloc((size + 1), sizeof(char));
 
     if (random_string) {
         srand(time(NULL));
-        for (size_t n = 0; n < size; n++) {
+        for (n = 0; n < size; n++) {
             int key = rand() % (int)(sizeof(charset) - 1);
             random_string[n] = charset[key];
         }
