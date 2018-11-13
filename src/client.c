@@ -224,9 +224,12 @@ int main() {
         wrefresh(mainwindow);
         wrefresh(inputwindow);
 
+        /* Read a character from the inputwindow */
         c = wgetch(inputwindow);
-        if (c == 13 || c == 10) { /* Newline */
-            /* Handle submit */
+
+        /* If a newline is reached submit the contents of input_buffer */
+        if (c == 13 || c == 10) {
+
             send_message(session, input_buffer, network_socket);
 
             memset(input_buffer, 0, MAX_MSG);

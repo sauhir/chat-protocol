@@ -31,6 +31,8 @@
 #include "server_commands.h"
 #include "session.h"
 
+#define PORT 8002
+
 /*
 Protocol handshake:
 Client sends
@@ -67,7 +69,7 @@ int open_client_socket(int server_socket) {
     int client_socket;
     client_socket = accept(server_socket, NULL, NULL);
     if (client_socket < 0) {
-        printf("Unable to accept coonection on socket\n");
+        printf("Unable to accept connection on socket\n");
         exit(1);
     }
     return client_socket;
@@ -92,7 +94,7 @@ int init_server_socket() {
 
     /* Specify address settings for the socket */
     server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(8002);
+    server_address.sin_port = htons(PORT);
     server_address.sin_addr.s_addr = INADDR_ANY;
 
     /* Bind the socket */
@@ -113,7 +115,7 @@ int init_server_socket() {
         printf("Error listening socket\n");
         exit(1);
     }
-    printf("Started listening\n");
+    printf("Started listening...\n");
     return server_socket;
 }
 
@@ -131,15 +133,18 @@ int main() {
 
     printf("Waiting for connection\n");
 
-    client_socket = open_client_socket(server_socket);
-    printf("Client connected\n");
-
     counter = 0;
+
+    client_socket = open_client_socket(server_socket);
+    printf("Client connected: %d\n", client_socket);
 
     /* Accept requests until interrupted */
     while (1) {
         chatMessage *message;
         char *formatted_msg;
+
+        /* Clear the input */
+        memset(input, 0, MAX_MSG);
 
         if (counter++ % 500 == 5) {
             send(client_socket, "::server:normal:test\n",
@@ -150,7 +155,7 @@ int main() {
         len = recv(client_socket, input, MAX_MSG, MSG_DONTWAIT);
 
         if (len < 0) {
-            usleep(10000);
+            usleep(20000);
             continue;
         } else if (len == 0) {
             /* close client socket if received nothing */
@@ -175,9 +180,6 @@ int main() {
             formatted_msg = format_message(message);
             send(client_socket, formatted_msg, strlen(formatted_msg), 0);
         }
-
-        /* Clear the input */
-        memset(input, 0, MAX_MSG);
     }
 
     free(input);
