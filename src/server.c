@@ -17,10 +17,10 @@
  */
 
 #include <netinet/in.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -48,9 +48,7 @@ AHOY-HOY:[random access token]
 The client must store the token and include it in subsequent requests.
 */
 
-void interrupt_handler() {
-    running = 0;
-}
+void interrupt_handler() { running = 0; }
 
 /*
  * Send handshake response.
@@ -144,15 +142,14 @@ int get_free_socket_idx(int *sockets) {
 }
 
 int main() {
-    char *input;        /* socket input message */
-    int server_socket;  /* socket for sending */
-    ssize_t len;        /* string length */
-    fd_set socket_set;  /* file descriptor set */
-    struct timeval select_timeout; /* select() timeout */
-    int running;        /* boolean to signal break in main loop */
-    int max_descriptor; /* hold the largest fd number */
+    char *input;                     /* socket input message */
+    int server_socket;               /* socket for sending */
+    ssize_t len;                     /* string length */
+    fd_set socket_set;               /* file descriptor set */
+    struct timeval select_timeout;   /* select() timeout */
+    int max_descriptor;              /* hold the largest fd number */
     int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
-    int i,j;
+    int i, j;
 
     signal(SIGINT, interrupt_handler);
 
@@ -164,7 +161,8 @@ int main() {
 
     running = 1;
 
-    for (i=0;i<MAX_SOCKETS;i++) client_sockets[i] = -1;
+    for (i = 0; i < MAX_SOCKETS; i++)
+        client_sockets[i] = -1;
 
     /* Accept requests until interrupted */
     while (running) {
@@ -176,7 +174,8 @@ int main() {
         FD_SET(STDIN_FILENO, &socket_set);
         FD_SET(server_socket, &socket_set);
         for (i = 0; i < MAX_SOCKETS; i++) {
-            if (client_sockets[i]>=0) FD_SET(client_sockets[i], &socket_set);
+            if (client_sockets[i] >= 0)
+                FD_SET(client_sockets[i], &socket_set);
         }
         select_timeout.tv_sec = 1;
         select_timeout.tv_usec = 0;
@@ -194,7 +193,7 @@ int main() {
                 int client_socket;
                 int free_socket_idx;
                 free_socket_idx = get_free_socket_idx(client_sockets);
-                if (free_socket_idx < 0) { 
+                if (free_socket_idx < 0) {
                     printf("No free socket available\n");
                     continue;
                 } else {
@@ -205,7 +204,7 @@ int main() {
                 client_socket = open_client_socket(server_socket);
                 printf("Client connected: %d\n", client_socket);
                 client_sockets[free_socket_idx] = client_socket;
-                if (client_socket>max_descriptor) {
+                if (client_socket > max_descriptor) {
                     max_descriptor = client_socket;
                 }
             }
@@ -226,35 +225,43 @@ int main() {
                         close(client_sockets[i]);
                         client_sockets[i] = -1;
 
-                        for(j=0;j<MAX_SOCKETS;j++) {
+                        for (j = 0; j < MAX_SOCKETS; j++) {
                             if (client_sockets[j]) {
-                                send(client_sockets[j], "::server:normal:Somebody left the chat\n",
-                                     strlen("::server:normal:Somebody left the chat\n"), 0);
+                                send(client_sockets[j],
+                                     "::server:normal:Somebody left the chat\n",
+                                     strlen("::server:normal:Somebody left the "
+                                            "chat\n"),
+                                     0);
                             }
-                        }                             
-                    }
-                    else if (strcmp(input, "AHOY") == 0) {
+                        }
+                    } else if (strcmp(input, "AHOY") == 0) {
                         /* If handshake init detected, shake hands */
                         handshake(client_sockets[i]);
 
-                        for(j=0;j<MAX_SOCKETS;j++) {
+                        for (j = 0; j < MAX_SOCKETS; j++) {
                             if (client_sockets[j]) {
-                                send(client_sockets[j], "::server:normal:Somebody joined the chat\n",
-                                     strlen("::server:normal:Somebody joined the chat\n"), 0);
+                                send(client_sockets[j],
+                                     "::server:normal:Somebody joined the "
+                                     "chat\n",
+                                     strlen("::server:normal:Somebody joined "
+                                            "the chat\n"),
+                                     0);
                             }
-                        }                        
-                    }
-                    else if (input[0] == ':') {
+                        }
+                    } else if (input[0] == ':') {
                         /* Parse message if input begins with colon */
                         command_write(input);
                         message = parse_message(input);
-                        printf("<%s> %s\n", message->nickname, message->message);
-                        message->token = ""; /* Clear the token from the message */
+                        printf("<%s> %s\n", message->nickname,
+                               message->message);
+                        message->token =
+                            ""; /* Clear the token from the message */
                         formatted_msg = format_message(message);
                         /* Send message back to all clients */
-                        for(j=0;j<MAX_SOCKETS;j++) {
+                        for (j = 0; j < MAX_SOCKETS; j++) {
                             if (client_sockets[j]) {
-                                send(client_sockets[j], formatted_msg, strlen(formatted_msg), 0);
+                                send(client_sockets[j], formatted_msg,
+                                     strlen(formatted_msg), 0);
                             }
                         }
                     }
@@ -270,7 +277,7 @@ int main() {
 
     /* Close the sockets */
     printf("Close sockets\n");
-    for(i=0;i<MAX_SOCKETS;i++) {
+    for (i = 0; i < MAX_SOCKETS; i++) {
         if (client_sockets[i] >= 0) {
             close(client_sockets[i]);
         }
