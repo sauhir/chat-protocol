@@ -58,4 +58,7 @@ Just run `make` and the server and client programs should be compiled.
 
 The current implementation consists of two programs: `server` and `client`. They can be found under the `bin/` directory after a successful compile.
 
-The implementation is extremely simple at this point, in fact, it's not a chat at all yet. It only supports a single client connection and even that is pretty limited in its functionality.
+The server runs on the port 8002. Currently it uses only localhost for all connections.
+
+Multiple clients can connect to the server and they see each others messages.
+
