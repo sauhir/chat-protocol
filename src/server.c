@@ -217,10 +217,24 @@ int main() {
                         /* Handle closed connection */
                         close(client_sockets[i]);
                         client_sockets[i] = -1;
+
+                        for(j=0;j<MAX_SOCKETS;j++) {
+                            if (client_sockets[j]) {
+                                send(client_sockets[j], "::server:normal:Somebody left the chat\n",
+                                     strlen("::server:normal:Somebody left the chat\n"), 0);
+                            }
+                        }                             
                     }
                     else if (strcmp(input, "AHOY") == 0) {
                         /* If handshake init detected, shake hands */
                         handshake(client_sockets[i]);
+
+                        for(j=0;j<MAX_SOCKETS;j++) {
+                            if (client_sockets[j]) {
+                                send(client_sockets[j], "::server:normal:Somebody joined the chat\n",
+                                     strlen("::server:normal:Somebody joined the chat\n"), 0);
+                            }
+                        }                        
                     }
                     else if (input[0] == ':') {
                         /* Parse message if input begins with colon */
