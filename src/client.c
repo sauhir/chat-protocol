@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
@@ -33,15 +34,12 @@
 #include "error_log.h"
 #include "session.h"
 
-static volatile int keep_running = 1;
+static volatile int running;
 
 static WINDOW *mainwindow;
 static WINDOW *inputwindow;
 
-void intHandler(__attribute__((unused)) int dummy) {
-    wprintw(mainwindow, "interrupt!");
-    keep_running = 0;
-}
+void interrupt_handler() { running = 0; }
 
 int printtime() {
     time_t rawtime;
@@ -181,11 +179,15 @@ int main() {
     chatSession *session;
     char *input_buffer;
     int input_pos = 0;
+    fd_set socket_set;             /* file descriptor set */
+    struct timeval select_timeout; /* select() timeout */
+
+    running = 1;
 
     curses_init();
 
     /* Add interrupt handler to catch CTRL-C */
-    signal(SIGINT, intHandler);
+    signal(SIGINT, interrupt_handler);
 
     network_socket = init_socket();
 
@@ -217,12 +219,18 @@ int main() {
     wprintw(inputwindow, "CHAT >> ");
 
     /* Main loop */
-    while (keep_running) {
+    while (running) {
         int c;
         chatMessage *msg;
 
         wrefresh(mainwindow);
         wrefresh(inputwindow);
+
+        /* Reset the file descriptors */
+        FD_ZERO(&socket_set);
+        FD_SET(network_socket, &socket_set);
+        select_timeout.tv_sec = 0;
+        select_timeout.tv_usec = 10000;
 
         /* Read a character from the inputwindow */
         c = wgetch(inputwindow);
@@ -230,6 +238,10 @@ int main() {
         /* If a newline is reached submit the contents of input_buffer */
         if (c == 13 || c == 10) {
 
+            if (input_pos <= 1) {
+                running = 0;
+                continue;
+            }
             send_message(session, input_buffer, network_socket);
 
             memset(input_buffer, 0, MAX_MSG);
@@ -242,20 +254,25 @@ int main() {
             input_buffer[input_pos++] = c;
         }
 
-        /* Get response from server */
-        len = recv(network_socket, server_response, MAX_MSG, MSG_DONTWAIT);
+        if (select(network_socket + 1, &socket_set, NULL, NULL,
+                   &select_timeout)) {
+            if (FD_ISSET(network_socket, &socket_set)) {
+                /* Get response from server */
+                len = recv(network_socket, server_response, MAX_MSG, 0);
 
-        if (len < 0) {
-            usleep(10000);
-            continue;
-        }
+                if (len < 0) {
+                    running = 0;
+                    continue;
+                }
+                msg = parse_message(server_response);
 
-        msg = parse_message(server_response);
-
-        /* Print out if valid message */
-        if (msg != NULL) {
-            printtime();
-            wprintw(mainwindow, "<%s> %s\n", msg->nickname, msg->message);
+                /* Print out if valid message */
+                if (msg != NULL) {
+                    printtime();
+                    wprintw(mainwindow, "<%s> %s\n", msg->nickname,
+                            msg->message);
+                }
+            }
         }
 
         /* Clear the arrays */
