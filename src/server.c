@@ -33,6 +33,7 @@
 #include "session.h"
 
 #define PORT 8002
+#define MAX_SOCKETS 10
 
 /*
 Protocol handshake:
@@ -120,17 +121,30 @@ int init_server_socket() {
     return server_socket;
 }
 
+/*
+ * Iterate through the array of available sockets to find an unused socket
+ * Returns the free socket array index
+ * Returns -1 if no free socket is available
+ */
+int get_free_socket_idx(int *sockets) {
+    int i;
+    for (i = 0; i < MAX_SOCKETS; ++i) {
+        if (sockets[i] == -1) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 int main() {
-    char *input;       /* socket input message */
-    int server_socket; /* socket for sending */
-    ssize_t len;       /* string length */
-    int counter;
-    fd_set socket_set;
-    struct timeval select_timeout;
-    int running;
-    int max_descriptor;
-    int client_sockets[100];
-    int client_socket_count;
+    char *input;        /* socket input message */
+    int server_socket;  /* socket for sending */
+    ssize_t len;        /* string length */
+    fd_set socket_set;  /* file descriptor set */
+    struct timeval select_timeout; /* select() timeout */
+    int running;        /* boolean to signal break in main loop */
+    int max_descriptor; /* hold the largest fd number */
+    int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
     int i,j;
 
     /* allocate memory for input */
@@ -140,8 +154,8 @@ int main() {
     max_descriptor = server_socket;
 
     running = 1;
-    counter = 0;
-    client_socket_count = 0;
+
+    for (i=0;i<MAX_SOCKETS;i++) client_sockets[i] = -1;
 
     /* Accept requests until interrupted */
     while (running) {
@@ -152,8 +166,8 @@ int main() {
         FD_ZERO(&socket_set);
         FD_SET(STDIN_FILENO, &socket_set);
         FD_SET(server_socket, &socket_set);
-        for (i = 0; i < client_socket_count; i++) {
-            FD_SET(client_sockets[i], &socket_set);
+        for (i = 0; i < MAX_SOCKETS; i++) {
+            if (client_sockets[i]>=0) FD_SET(client_sockets[i], &socket_set);
         }
         select_timeout.tv_sec = 1;
         select_timeout.tv_usec = 0;
@@ -170,35 +184,56 @@ int main() {
             /* Check connection attempt to server socket */
             if (FD_ISSET(server_socket, &socket_set)) {
                 int client_socket;
+                int free_socket_idx;
+                free_socket_idx = get_free_socket_idx(client_sockets);
+                if (free_socket_idx < 0) { 
+                    printf("No free socket available\n");
+                    continue;
+                } else {
+                    printf("Free socket at index %d\n", free_socket_idx);
+                }
+
                 printf("Request on socket: %d\n", server_socket);
                 client_socket = open_client_socket(server_socket);
                 printf("Client connected: %d\n", client_socket);
-                client_sockets[client_socket_count++] = client_socket;
+                client_sockets[free_socket_idx] = client_socket;
                 if (client_socket>max_descriptor) {
                     max_descriptor = client_socket;
                 }
             }
             /* Check connections to client sockets */
-            for (i = 0; i < client_socket_count; i++) {
+            for (i = 0; i < MAX_SOCKETS; i++) {
+                if (client_sockets[i] == -1) {
+                    continue;
+                }
+
                 if (FD_ISSET(client_sockets[i], &socket_set)) {
                     printf("Client socket activity\n");
                     len = recv(client_sockets[i], input, MAX_MSG, 0);
 
-                    /* If handshake init detected, shake hands */
-                    if (strcmp(input, "AHOY") == 0) {
+                    printf("len: %ld\n", len);
+
+                    if (len < 0) {
+                        /* Handle closed connection */
+                        close(client_sockets[i]);
+                        client_sockets[i] = -1;
+                    }
+                    else if (strcmp(input, "AHOY") == 0) {
+                        /* If handshake init detected, shake hands */
                         handshake(client_sockets[i]);
                     }
-
-                    /* Parse message if input begins with colon */
-                    if (input[0] == ':') {
+                    else if (input[0] == ':') {
+                        /* Parse message if input begins with colon */
                         command_write(input);
                         message = parse_message(input);
                         printf("<%s> %s\n", message->nickname, message->message);
                         message->token = ""; /* Clear the token from the message */
                         formatted_msg = format_message(message);
                         /* Send message back to all clients */
-                        for(j=0;j<client_socket_count;j++) {
-                            send(client_sockets[j], formatted_msg, strlen(formatted_msg), 0);
+                        for(j=0;j<MAX_SOCKETS;j++) {
+                            if (client_sockets[j]) {
+                                send(client_sockets[j], formatted_msg, strlen(formatted_msg), 0);
+                            }
                         }
                     }
                 }
@@ -213,8 +248,10 @@ int main() {
 
     /* Close the sockets */
     printf("Close sockets\n");
-    for(i=0;i<client_socket_count;i++) {
-        close(client_sockets[i]);
+    for(i=0;i<MAX_SOCKETS;i++) {
+        if (client_sockets[i] >= 0) {
+            close(client_sockets[i]);
+        }
     }
     close(server_socket);
 
