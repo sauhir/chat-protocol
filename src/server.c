@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -35,6 +36,8 @@
 #define PORT 8002
 #define MAX_SOCKETS 10
 
+static volatile int running;
+
 /*
 Protocol handshake:
 Client sends
@@ -44,6 +47,10 @@ AHOY-HOY:[random access token]
 
 The client must store the token and include it in subsequent requests.
 */
+
+void interrupt_handler() {
+    running = 0;
+}
 
 /*
  * Send handshake response.
@@ -147,6 +154,8 @@ int main() {
     int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
     int i,j;
 
+    signal(SIGINT, interrupt_handler);
+
     /* allocate memory for input */
     input = calloc(MAX_MSG, sizeof(char));
 
@@ -176,8 +185,7 @@ int main() {
                    &select_timeout)) {
             /* Check input from stdin */
             if (FD_ISSET(0, &socket_set)) {
-                printf("Shutting down\n");
-                getchar();
+                printf("\nShutting down\n");
                 running = 0;
                 continue;
             }
