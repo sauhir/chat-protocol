@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
@@ -122,70 +123,99 @@ int init_server_socket() {
 int main() {
     char *input;       /* socket input message */
     int server_socket; /* socket for sending */
-    int client_socket; /* socket used for receiving */
     ssize_t len;       /* string length */
     int counter;
+    fd_set socket_set;
+    struct timeval select_timeout;
+    int running;
+    int max_descriptor;
+    int client_sockets[100];
+    int client_socket_count;
+    int i,j;
 
     /* allocate memory for input */
     input = calloc(MAX_MSG, sizeof(char));
 
     server_socket = init_server_socket();
+    max_descriptor = server_socket;
 
-    printf("Waiting for connection\n");
-
+    running = 1;
     counter = 0;
-
-    client_socket = open_client_socket(server_socket);
-    printf("Client connected: %d\n", client_socket);
+    client_socket_count = 0;
 
     /* Accept requests until interrupted */
-    while (1) {
+    while (running) {
         chatMessage *message;
         char *formatted_msg;
 
-        /* Clear the input */
-        memset(input, 0, MAX_MSG);
-
-        if (counter++ % 500 == 5) {
-            send(client_socket, "::server:normal:test\n",
-                 strlen("::server:normal:test\n"), 0);
+        /* Reset the file descriptors */
+        FD_ZERO(&socket_set);
+        FD_SET(STDIN_FILENO, &socket_set);
+        FD_SET(server_socket, &socket_set);
+        for (i = 0; i < client_socket_count; i++) {
+            FD_SET(client_sockets[i], &socket_set);
         }
+        select_timeout.tv_sec = 1;
+        select_timeout.tv_usec = 0;
 
-        /* Read input */
-        len = recv(client_socket, input, MAX_MSG, MSG_DONTWAIT);
+        if (select(max_descriptor + 1, &socket_set, NULL, NULL,
+                   &select_timeout)) {
+            /* Check input from stdin */
+            if (FD_ISSET(0, &socket_set)) {
+                printf("Shutting down\n");
+                getchar();
+                running = 0;
+                continue;
+            }
+            /* Check connection attempt to server socket */
+            if (FD_ISSET(server_socket, &socket_set)) {
+                int client_socket;
+                printf("Request on socket: %d\n", server_socket);
+                client_socket = open_client_socket(server_socket);
+                printf("Client connected: %d\n", client_socket);
+                client_sockets[client_socket_count++] = client_socket;
+                if (client_socket>max_descriptor) {
+                    max_descriptor = client_socket;
+                }
+            }
+            /* Check connections to client sockets */
+            for (i = 0; i < client_socket_count; i++) {
+                if (FD_ISSET(client_sockets[i], &socket_set)) {
+                    printf("Client socket activity\n");
+                    len = recv(client_sockets[i], input, MAX_MSG, 0);
 
-        if (len < 0) {
-            usleep(20000);
-            continue;
-        } else if (len == 0) {
-            /* close client socket if received nothing */
-            printf("Client disconnected.\n");
-            close(client_socket);
-            client_socket = open_client_socket(server_socket);
-            continue;
+                    /* If handshake init detected, shake hands */
+                    if (strcmp(input, "AHOY") == 0) {
+                        handshake(client_sockets[i]);
+                    }
+
+                    /* Parse message if input begins with colon */
+                    if (input[0] == ':') {
+                        command_write(input);
+                        message = parse_message(input);
+                        printf("<%s> %s\n", message->nickname, message->message);
+                        message->token = ""; /* Clear the token from the message */
+                        formatted_msg = format_message(message);
+                        /* Send message back to all clients */
+                        for(j=0;j<client_socket_count;j++) {
+                            send(client_sockets[j], formatted_msg, strlen(formatted_msg), 0);
+                        }
+                    }
+                }
+            }
+        } else {
+            /* No input received */
         }
-
-        /* Check if input is a handshake initiation */
-        if (strcmp(input, "AHOY") == 0) {
-            handshake(client_socket);
-            continue;
-        }
-
-        /* Parse message if input begins with colon */
-        if (input[0] == ':') {
-            command_write(input);
-            message = parse_message(input);
-            printf("<%s> %s\n", message->nickname, message->message);
-            message->token = ""; /* Clear the token from the message */
-            formatted_msg = format_message(message);
-            send(client_socket, formatted_msg, strlen(formatted_msg), 0);
-        }
+        usleep(20000);
     }
 
     free(input);
 
     /* Close the sockets */
-    close(client_socket);
+    printf("Close sockets\n");
+    for(i=0;i<client_socket_count;i++) {
+        close(client_sockets[i]);
+    }
     close(server_socket);
 
     return 0;
