@@ -58,7 +58,7 @@ Just run `make` and the server and client programs should be compiled.
 
 The current implementation consists of two programs: `server` and `client`. They can be found under the `bin/` directory after a successful compile.
 
-The server runs on the port 8002. Currently it uses only localhost for all connections.
+The server runs on the port 8002. You can provide an IP address as a command line argument for the client. If no argument is provided "127.0.0.1" is used by default. Only IP addresses are accepted at the moment (no domains).
 
 Multiple clients can connect to the server and they see each others messages.
 

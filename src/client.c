@@ -113,7 +113,7 @@ int set_nickname(chatSession *session) {
     return 0;
 }
 
-int init_socket() {
+int init_socket(char *address) {
     struct sockaddr_in server_address;
     int network_socket;
     int status;
@@ -124,7 +124,7 @@ int init_socket() {
     /* Specify an address for the socket */
     server_address.sin_family = AF_INET;
     server_address.sin_port = htons(8002);
-    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+    server_address.sin_addr.s_addr = inet_addr(address);
 
     /* Connect to the server */
     status = connect(network_socket, (struct sockaddr *)&server_address,
@@ -175,7 +175,7 @@ void curses_init() {
     scrollok(inputwindow, TRUE);
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     int network_socket;
     int status;
     char *server_response;
@@ -187,6 +187,7 @@ int main() {
     fd_set socket_set;             /* file descriptor set */
     struct timeval select_timeout; /* select() timeout */
     struct timeval recv_timeout;   /* recv() timeout */
+    char *address;
 
     running = 1;
     /* Set a 10 msec timeout to select() calls */
@@ -197,12 +198,19 @@ int main() {
     recv_timeout.tv_sec = 3;
     recv_timeout.tv_usec = 0;
 
+    /* Get server IP from command line arg if available */
+    if (argc == 1) {
+        address = "127.0.0.1";
+    } else {
+        address = argv[1];
+    }
+
     curses_init();
 
     /* Add interrupt handler to catch CTRL-C */
     signal(SIGINT, interrupt_handler);
 
-    network_socket = init_socket();
+    network_socket = init_socket(address);
 
     setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO,
                (const char *)&recv_timeout, sizeof recv_timeout);

@@ -158,7 +158,7 @@ void send_to_all(int *sockets, int max_sockets, char *message) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
     char *input;                     /* socket input message */
     int server_socket;               /* socket for sending */
     ssize_t len;                     /* string length */
