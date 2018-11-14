@@ -48,7 +48,9 @@ AHOY-HOY:[random access token]
 The client must store the token and include it in subsequent requests.
 */
 
-void interrupt_handler() { running = 0; }
+void interrupt_handler() {
+    running = 0;
+}
 
 /*
  * Send handshake response.
