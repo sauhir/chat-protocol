@@ -186,8 +186,16 @@ int main() {
     int input_pos = 0;
     fd_set socket_set;             /* file descriptor set */
     struct timeval select_timeout; /* select() timeout */
+    struct timeval recv_timeout;   /* recv() timeout */
 
     running = 1;
+    /* Set a 10 msec timeout to select() calls */
+    select_timeout.tv_sec = 0;
+    select_timeout.tv_usec = 10000;
+
+    /* Set a 3 second timeout to recv() calls */
+    recv_timeout.tv_sec = 3;
+    recv_timeout.tv_usec = 0;
 
     curses_init();
 
@@ -195,6 +203,9 @@ int main() {
     signal(SIGINT, interrupt_handler);
 
     network_socket = init_socket();
+
+    setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO,
+               (const char *)&recv_timeout, sizeof recv_timeout);
 
     /* Initialize the session variable */
     session = create_session();
@@ -234,8 +245,6 @@ int main() {
         /* Reset the file descriptors */
         FD_ZERO(&socket_set);
         FD_SET(network_socket, &socket_set);
-        select_timeout.tv_sec = 0;
-        select_timeout.tv_usec = 10000;
 
         /* Read a character from the inputwindow */
         c = wgetch(inputwindow);
