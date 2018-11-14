@@ -18,6 +18,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <time.h>
 
 /*
  * Log error without formatting to error.log
@@ -25,11 +26,18 @@
  */
 void log_error(const char *msg) {
     FILE *fp;
+    time_t rawtime;
+    struct tm *timeinfo;
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
+
     fp = fopen("error.log", "a+");
     if (fp == NULL) {
         return;
     }
-    fprintf(fp, "%s\n", msg);
+    fprintf(fp, "[%02d:%02d:%02d] %s\n", timeinfo->tm_hour, timeinfo->tm_min,
+            timeinfo->tm_sec, msg);
     fclose(fp);
 }
 
@@ -40,6 +48,11 @@ void log_error(const char *msg) {
 void log_errorf(const char *msg, ...) {
     FILE *fp;
     va_list args;
+    time_t rawtime;
+    struct tm *timeinfo;
+
+    time(&rawtime);
+    timeinfo = localtime(&rawtime);
 
     fp = fopen("error.log", "a+");
     if (fp == NULL) {
@@ -47,6 +60,8 @@ void log_errorf(const char *msg, ...) {
     }
 
     va_start(args, msg);
+    fprintf(fp, "[%02d:%02d:%02d] ", timeinfo->tm_hour, timeinfo->tm_min,
+            timeinfo->tm_sec);
     vfprintf(fp, msg, args);
     fprintf(fp, "\n");
     va_end(args);
