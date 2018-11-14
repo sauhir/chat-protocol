@@ -281,6 +281,10 @@ int main() {
                     running = 0;
                     break;
                 }
+                if (len == 0) {
+                    running = 0;
+                    break;
+                }
                 msg = parse_message(server_response);
 
                 /* Print out if valid message */
