@@ -162,11 +162,18 @@ int main() {
     ssize_t len;                     /* string length */
     fd_set socket_set;               /* file descriptor set */
     struct timeval select_timeout;   /* select() timeout */
+    struct timeval sr_timeout;       /* send() recv() timeout */
     int max_descriptor;              /* hold the largest fd number */
     int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
     int i;
 
     signal(SIGINT, interrupt_handler);
+
+    select_timeout.tv_sec = 1;
+    select_timeout.tv_usec = 0;
+
+    sr_timeout.tv_sec = 5;
+    sr_timeout.tv_usec = 0;
 
     /* allocate memory for input */
     input = calloc(MAX_MSG, sizeof(char));
@@ -176,8 +183,10 @@ int main() {
 
     running = 1;
 
-    for (i = 0; i < MAX_SOCKETS; i++)
+    /* Invalidate initial socket list */
+    for (i = 0; i < MAX_SOCKETS; i++) {
         client_sockets[i] = -1;
+    }
 
     /* Accept requests until interrupted */
     while (running) {
@@ -189,11 +198,10 @@ int main() {
         FD_SET(STDIN_FILENO, &socket_set);
         FD_SET(server_socket, &socket_set);
         for (i = 0; i < MAX_SOCKETS; i++) {
-            if (client_sockets[i] >= 0)
+            if (client_sockets[i] >= 0) {
                 FD_SET(client_sockets[i], &socket_set);
+            }
         }
-        select_timeout.tv_sec = 1;
-        select_timeout.tv_usec = 0;
 
         if (select(max_descriptor + 1, &socket_set, NULL, NULL,
                    &select_timeout)) {
@@ -217,6 +225,11 @@ int main() {
 
                 printf("Request on socket: %d\n", server_socket);
                 client_socket = open_client_socket(server_socket);
+                setsockopt(client_socket, SOL_SOCKET, SO_SNDTIMEO,
+                           (const char *)&sr_timeout, sizeof sr_timeout);
+                setsockopt(client_socket, SOL_SOCKET, SO_RCVTIMEO,
+                           (const char *)&sr_timeout, sizeof sr_timeout);
+
                 printf("Client connected: %d\n", client_socket);
                 client_sockets[free_socket_idx] = client_socket;
                 if (client_socket > max_descriptor) {
