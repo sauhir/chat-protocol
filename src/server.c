@@ -141,6 +141,21 @@ int get_free_socket_idx(int *sockets) {
     return -1;
 }
 
+void send_to_socket(int socket, char *message) {
+    if (socket) {
+        send(socket, message, strlen(message), 0);
+    }
+}
+
+void send_to_all(int *sockets, int max_sockets, char *message) {
+    int i;
+    for (i = 0; i < max_sockets; i++) {
+        if (sockets[i]) {
+            send(sockets[i], message, strlen(message), 0);
+        }
+    }
+}
+
 int main() {
     char *input;                     /* socket input message */
     int server_socket;               /* socket for sending */
@@ -149,7 +164,7 @@ int main() {
     struct timeval select_timeout;   /* select() timeout */
     int max_descriptor;              /* hold the largest fd number */
     int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
-    int i, j;
+    int i;
 
     signal(SIGINT, interrupt_handler);
 
@@ -225,45 +240,26 @@ int main() {
                         close(client_sockets[i]);
                         client_sockets[i] = -1;
 
-                        for (j = 0; j < MAX_SOCKETS; j++) {
-                            if (client_sockets[j]) {
-                                send(client_sockets[j],
-                                     "::server:normal:Somebody left the chat\n",
-                                     strlen("::server:normal:Somebody left the "
-                                            "chat\n"),
-                                     0);
-                            }
-                        }
+                        send_to_all(client_sockets, MAX_SOCKETS,
+                                    "::server:normal:Somebody left the chat\n");
                     } else if (strcmp(input, "AHOY") == 0) {
                         /* If handshake init detected, shake hands */
                         handshake(client_sockets[i]);
 
-                        for (j = 0; j < MAX_SOCKETS; j++) {
-                            if (client_sockets[j]) {
-                                send(client_sockets[j],
-                                     "::server:normal:Somebody joined the "
-                                     "chat\n",
-                                     strlen("::server:normal:Somebody joined "
-                                            "the chat\n"),
-                                     0);
-                            }
-                        }
+                        send_to_all(client_sockets, MAX_SOCKETS,
+                                    "::server:normal:"
+                                    "Somebody joined the chat\n");
                     } else if (input[0] == ':') {
                         /* Parse message if input begins with colon */
                         command_write(input);
                         message = parse_message(input);
                         printf("<%s> %s\n", message->nickname,
                                message->message);
-                        message->token =
-                            ""; /* Clear the token from the message */
+                        /* Clear the token from the message */
+                        message->token = "";
                         formatted_msg = format_message(message);
                         /* Send message back to all clients */
-                        for (j = 0; j < MAX_SOCKETS; j++) {
-                            if (client_sockets[j]) {
-                                send(client_sockets[j], formatted_msg,
-                                     strlen(formatted_msg), 0);
-                            }
-                        }
+                        send_to_all(client_sockets, MAX_SOCKETS, formatted_msg);
                     }
                 }
             }
