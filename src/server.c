@@ -215,7 +215,7 @@ int main() {
                 }
 
                 if (FD_ISSET(client_sockets[i], &socket_set)) {
-                    printf("Client socket activity\n");
+                    printf("Client socket activity: %d\n", i);
                     len = recv(client_sockets[i], input, MAX_MSG, 0);
 
                     printf("len: %ld\n", len);

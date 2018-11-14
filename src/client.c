@@ -39,7 +39,12 @@ static volatile int running;
 static WINDOW *mainwindow;
 static WINDOW *inputwindow;
 
-void interrupt_handler() { running = 0; }
+void interrupt_handler(int signal) {
+    if (signal == SIGINT) {
+        log_error("interrupt received");
+        running = 0;
+    }
+}
 
 int printtime() {
     time_t rawtime;
@@ -237,7 +242,6 @@ int main() {
 
         /* If a newline is reached submit the contents of input_buffer */
         if (c == 13 || c == 10) {
-
             if (input_pos <= 1) {
                 running = 0;
                 continue;
@@ -257,12 +261,16 @@ int main() {
         if (select(network_socket + 1, &socket_set, NULL, NULL,
                    &select_timeout)) {
             if (FD_ISSET(network_socket, &socket_set)) {
+                if (!running) {
+                    log_error("Main loop interrupted");
+                    break;
+                }
                 /* Get response from server */
                 len = recv(network_socket, server_response, MAX_MSG, 0);
 
                 if (len < 0) {
                     running = 0;
-                    continue;
+                    break;
                 }
                 msg = parse_message(server_response);
 
@@ -280,6 +288,9 @@ int main() {
         memset(input, 0, MAX_MSG);
     }
 
+    /* Curses cleanup */
+    delwin(mainwindow);
+    delwin(inputwindow);
     endwin();
 
     free(input);
