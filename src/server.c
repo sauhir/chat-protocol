@@ -195,6 +195,9 @@ int main(int argc, char *argv[]) {
         chatMessage *message;
         char *formatted_msg;
 
+        /* Clear input buffer */
+        memset(input, 0, MAX_MSG);
+
         /* Reset the file descriptors */
         FD_ZERO(&socket_set);
         FD_SET(STDIN_FILENO, &socket_set);
@@ -250,7 +253,7 @@ int main(int argc, char *argv[]) {
 
                     printf("len: %ld\n", len);
 
-                    if (len < 0) {
+                    if (len <= 0) {
                         /* Handle closed connection */
                         close(client_sockets[i]);
                         client_sockets[i] = -1;
