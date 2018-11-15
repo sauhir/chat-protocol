@@ -18,6 +18,7 @@
 
 #include <arpa/inet.h>
 #include <curses.h>
+#include <locale.h>
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
@@ -171,6 +172,7 @@ void send_message(chatSession *session, char *buffer, int network_socket) {
  * Initialize curses windows
  */
 void curses_init() {
+    setlocale(LC_ALL, "");
     initscr();
     mainwindow = create_newwin(LINES - 3, COLS, 0, 0);
     inputwindow = create_newwin(3, COLS, LINES - 3, 0);
@@ -250,7 +252,7 @@ int main(int argc, char *argv[]) {
 
     /* Main loop */
     while (running) {
-        int c, x, y;
+        int c, c2, x, y;
         chatMessage *msg;
 
         wrefresh(mainwindow);
@@ -263,13 +265,20 @@ int main(int argc, char *argv[]) {
         /* Read a character from the inputwindow */
         c = wgetch(inputwindow);
 
-        /* Character code logging
+        /* Character code logging */
+        /*
         if (c > 0) {
             wprintw(mainwindow, "%ld\n", c);
-        }
-        */
+        }*/
 
-        if (c == '\033') {
+        if (c == 195) {
+            /* First byte of scandinavian character */
+            /* Read second byte and print both */
+            c2 = wgetch(inputwindow);
+            wprintw(inputwindow, "%c%c", c, c2);
+            input_buffer[input_pos++] = c;
+            input_buffer[input_pos++] = c2;
+        } else if (c == '\033') {
             /* If escape code received, supress two next characters */
             wgetch(inputwindow);
             wgetch(inputwindow);
