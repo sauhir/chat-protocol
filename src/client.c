@@ -295,20 +295,16 @@ int main(int argc, char *argv[]) {
                    &select_timeout)) {
             if (FD_ISSET(network_socket, &socket_set)) {
                 if (!running) {
-                    log_error("Main loop interrupted");
                     break;
                 }
                 /* Get response from server */
                 len = recv(network_socket, server_response, MAX_MSG, 0);
 
-                if (len < 0) {
+                if (len <= 0) {
                     running = 0;
                     break;
                 }
-                if (len == 0) {
-                    running = 0;
-                    break;
-                }
+
                 msg = parse_message(server_response);
 
                 /* Print out if valid message */
