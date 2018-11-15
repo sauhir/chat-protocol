@@ -262,20 +262,19 @@ int main(int argc, char *argv[]) {
                         client_sockets[i] = -1;
 
                         send_to_all(client_sockets, MAX_SOCKETS,
-                                    "::server:normal:Somebody left the chat\n");
+                                    "::server:status:Somebody left the chat\n");
                     } else if (strcmp(input, "AHOY") == 0) {
                         /* If handshake init detected, shake hands */
                         handshake(client_sockets[i]);
 
                         send_to_all(client_sockets, MAX_SOCKETS,
-                                    "::server:normal:"
+                                    "::server:status:"
                                     "Somebody joined the chat\n");
                     } else if (input[0] == ':') {
                         /* Parse message if input begins with colon */
                         command_write(input);
                         message = parse_message(input);
-                        printf("<%s> %s\n", message->nickname,
-                               message->message);
+                        printf("%s\n", input);
                         /* Clear the token from the message */
                         message->token = "";
                         formatted_msg = format_message(message);

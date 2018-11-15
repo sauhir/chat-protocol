@@ -19,12 +19,18 @@
 #ifndef CHAT_MESSAGE_H
 #define CHAT_MESSAGE_H
 
+typedef enum {
+    msg_type_normal = 0,
+    msg_type_status = 1,
+    msg_type_unknown = 2
+} msg_type;
+
 /* Chat message */
 typedef struct _chatMessage {
     char *token;
-    char *nickname;     /* Sender's nickname */
-    char *message_type; /* Message type */
-    char *message;      /* Chat message contents */
+    char *nickname;        /* Sender's nickname */
+    msg_type message_type; /* Message type enum */
+    char *message;         /* Chat message contents */
 } chatMessage;
 
 char *format_message(chatMessage *message);

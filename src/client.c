@@ -156,7 +156,7 @@ void send_message(chatSession *session, char *buffer, int network_socket) {
     chatMessage *message = malloc(sizeof(chatMessage));
     message->token = session->token;
     message->nickname = session->nickname;
-    message->message_type = "normal";
+    message->message_type = msg_type_normal;
     message->message = buffer;
 
     msg_str = format_message(message);
@@ -309,9 +309,14 @@ int main(int argc, char *argv[]) {
 
                 /* Print out if valid message */
                 if (msg != NULL) {
-                    printtime();
-                    wprintw(mainwindow, "<%s> %s\n", msg->nickname,
-                            msg->message);
+                    if (msg->message_type == msg_type_status) {
+                        printtime();
+                        wprintw(mainwindow, "-- %s\n", msg->message);
+                    } else {
+                        printtime();
+                        wprintw(mainwindow, "<%s> %s\n", msg->nickname,
+                                msg->message);
+                    }
                 }
             }
         }

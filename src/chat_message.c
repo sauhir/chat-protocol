@@ -27,13 +27,24 @@
 
 char *msg_parse_token(char *param_ptr, char separator);
 
+char *msg_type_string(msg_type message_type) {
+    if (message_type == msg_type_normal) {
+        return "normal";
+    } else if (message_type == msg_type_status) {
+        return "status";
+    } else {
+        return "unknown";
+    }
+}
+
 /*
  * Returns a formatted string according to protocol spec. E.g.
  * :abcd1234:nickname:normal:This is a message
  */
 char *format_message(chatMessage *message) {
     size_t msg_size = strlen(message->token) + strlen(message->nickname) +
-                      strlen(message->message_type) + strlen(message->message) +
+                      strlen(msg_type_string(message->message_type)) +
+                      strlen(message->message) +
                       5; /* 5 = 4 colons and newline */
 
     char *message_str = calloc(msg_size, sizeof(char));
@@ -43,7 +54,7 @@ char *format_message(chatMessage *message) {
     strcat(message_str, ":");
     strcat(message_str, message->nickname);
     strcat(message_str, ":");
-    strcat(message_str, message->message_type);
+    strcat(message_str, msg_type_string(message->message_type));
     strcat(message_str, ":");
     strcat(message_str, message->message);
     strcat(message_str, "\n");
@@ -58,6 +69,7 @@ char *format_message(chatMessage *message) {
  */
 chatMessage *parse_message(char *message) {
     chatMessage *msg;
+    char *msg_type_str;
 
     if (strlen(message) == 0) {
         /* Empty string */
@@ -75,13 +87,23 @@ chatMessage *parse_message(char *message) {
         return NULL;
     }
     /* Parse message type */
-    if ((msg->message_type = msg_parse_token(NULL, ':')) == NULL) {
+    if ((msg_type_str = msg_parse_token(NULL, ':')) == NULL) {
         return NULL;
+    } else {
+        if (strcmp(msg_type_str, "normal") == 0) {
+            msg->message_type = msg_type_normal;
+        } else if (strcmp(msg_type_str, "status") == 0) {
+            msg->message_type = msg_type_status;
+        } else {
+            msg->message_type = msg_type_unknown;
+        }
     }
+
     /* Parse message */
     if ((msg->message = msg_parse_token(NULL, '\n')) == NULL) {
         return NULL;
     }
+
     return msg;
 }
 
