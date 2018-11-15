@@ -245,7 +245,7 @@ int main(int argc, char *argv[]) {
 
     /* Main loop */
     while (running) {
-        int c;
+        int c, x, y;
         chatMessage *msg;
 
         wrefresh(mainwindow);
@@ -258,10 +258,21 @@ int main(int argc, char *argv[]) {
         /* Read a character from the inputwindow */
         c = wgetch(inputwindow);
 
-        /* If a newline is reached submit the contents of input_buffer */
-        if (c == 13 || c == 10) {
-            if (input_pos <= 1) {
-                running = 0;
+        /* Character code logging
+        if (c > 0) {
+            wprintw(mainwindow, "%ld\n", c);
+        }
+        */
+
+        if (c == 127) {
+            /* Backspace was pressed. Erase the last character.*/
+            input_buffer[--input_pos] = 0;
+            getyx(inputwindow, y, x);
+            mvwaddch(inputwindow, y, x - 1, ' ');
+            wmove(inputwindow, y, x - 1);
+        } else if (c == 13 || c == 10) {
+            /* If a newline is reached submit the contents of input_buffer */
+            if (input_pos == 0) {
                 continue;
             }
             send_message(session, input_buffer, network_socket);
