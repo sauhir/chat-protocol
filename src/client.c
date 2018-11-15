@@ -264,7 +264,11 @@ int main(int argc, char *argv[]) {
         }
         */
 
-        if (c == 127) {
+        if (c == '\033') {
+            /* If escape code received, supress two next characters */
+            wgetch(inputwindow);
+            wgetch(inputwindow);
+        } else if (c == 127) {
             /* Backspace was pressed. Erase the last character.*/
             input_buffer[--input_pos] = 0;
             getyx(inputwindow, y, x);
