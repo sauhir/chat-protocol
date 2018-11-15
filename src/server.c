@@ -16,6 +16,9 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* Fix utime() warning on Linux */
+#define _BSD_SOURCE
+
 #include <netinet/in.h>
 #include <signal.h>
 #include <stdio.h>
