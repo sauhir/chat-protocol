@@ -71,6 +71,8 @@ int handshake(int socket) {
 
     printf("Send handshake response\n");
     send(socket, buf, strlen(buf), 0);
+    free(token);
+    free(buf);
     return 0;
 }
 
@@ -280,6 +282,8 @@ int main(int argc, char *argv[]) {
                         formatted_msg = format_message(message);
                         /* Send message back to all clients */
                         send_to_all(client_sockets, MAX_SOCKETS, formatted_msg);
+                        free(formatted_msg);
+                        free(message);
                     }
                 }
             }

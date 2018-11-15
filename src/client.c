@@ -86,7 +86,9 @@ int handshake(int socket, chatSession *session) {
         strcpy(token, part);
         session->token = token;
         wprintw(mainwindow, "Authentication token: %s\n", session->token);
+        free(response);
     } else {
+        free(response);
         return -1;
     }
     return 0;
@@ -160,9 +162,9 @@ void send_message(chatSession *session, char *buffer, int network_socket) {
     message->message = buffer;
 
     msg_str = format_message(message);
-
     /* Send message to server */
     send(network_socket, msg_str, MAX_MSG, 0);
+    free(msg_str);
 }
 
 /*
@@ -231,6 +233,9 @@ int main(int argc, char *argv[]) {
     if (status == -1) {
         wprintw(mainwindow, "Handshake failed.\n");
         endwin();
+        free(server_response);
+        free(input);
+        free(input_buffer);
         exit(1);
     }
 
@@ -318,6 +323,7 @@ int main(int argc, char *argv[]) {
                                 msg->message);
                     }
                 }
+                free(msg);
             }
         }
 
@@ -331,7 +337,11 @@ int main(int argc, char *argv[]) {
     delwin(inputwindow);
     endwin();
 
+    free(server_response);
     free(input);
+    free(input_buffer);
+    free(session);
+
     /* Close the socket */
     close(network_socket);
 
