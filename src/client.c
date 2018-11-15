@@ -274,11 +274,13 @@ int main(int argc, char *argv[]) {
             wgetch(inputwindow);
             wgetch(inputwindow);
         } else if (c == 127) {
-            /* Backspace was pressed. Erase the last character.*/
-            input_buffer[--input_pos] = 0;
-            getyx(inputwindow, y, x);
-            mvwaddch(inputwindow, y, x - 1, ' ');
-            wmove(inputwindow, y, x - 1);
+            if (input_pos > 0) {
+                /* Backspace was pressed. Erase the last character.*/
+                input_buffer[--input_pos] = 0;
+                getyx(inputwindow, y, x);
+                mvwaddch(inputwindow, y, x - 1, ' ');
+                wmove(inputwindow, y, x - 1);
+            }
         } else if (c == 13 || c == 10) {
             /* If a newline is reached submit the contents of input_buffer */
             if (input_pos == 0) {
