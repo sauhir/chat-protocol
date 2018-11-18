@@ -172,8 +172,7 @@ int main(int argc, char *argv[]) {
     struct timeval sr_timeout;       /* send() recv() timeout */
     int max_descriptor;              /* hold the largest fd number */
     int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
-    clock_t timer, difference;
-    int sec;
+    long seconds;
     int i;
 
     signal(SIGINT, interrupt_handler);
@@ -197,7 +196,7 @@ int main(int argc, char *argv[]) {
         client_sockets[i] = -1;
     }
 
-    timer = clock();
+    seconds = time(NULL);
 
     /* Accept requests until interrupted */
     while (running) {
@@ -217,13 +216,10 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        difference = clock() - timer;
-        sec = difference * 10000 / CLOCKS_PER_SEC;
-
-        if (sec > 15) {
+        if ((time(NULL) - seconds) > 15) {
             printf("Ping!\n");
             send_to_all(client_sockets, MAX_SOCKETS, "::server:ping:PING\n");
-            timer = clock();
+            seconds = time(NULL);
         }
 
         if (select(max_descriptor + 1, &socket_set, NULL, NULL,
