@@ -21,10 +21,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <arpa/inet.h>
 #include <fcntl.h>
 #include <locale.h>
-#include <netinet/in.h>
 #include <signal.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -35,6 +33,9 @@
 #ifdef __linux
 #include <sys/select.h>
 #endif
+
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include "chat.h"
 #include "chat_message.h"
