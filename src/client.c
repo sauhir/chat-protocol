@@ -118,7 +118,7 @@ int set_nickname(chatSession *session) {
 
     /* Replace colons with underscore in nickname */
     for (i = 0; i < strlen(nick); i++) {
-        if (nick[i] == ':') {
+        if (nick[i] == ':' || nick[i] == ' ') {
             nick[i] = '_';
         }
     }
