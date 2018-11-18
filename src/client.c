@@ -21,19 +21,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <arpa/inet.h>
+#include <fcntl.h>
 #include <locale.h>
+#include <netinet/in.h>
 #include <signal.h>
 #include <string.h>
-#include <fcntl.h>
-/*
-#include <sys/select.h>
-*/
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+
+#ifdef __linux
+#include <sys/select.h>
+#endif
 
 #include "chat.h"
 #include "chat_message.h"
@@ -109,7 +110,7 @@ int set_nickname(chatSession *session) {
     unsigned int i;
 
     nick = calloc(MAX_NICK, sizeof(char));
-    wmove(inputwindow, 0,0);
+    wmove(inputwindow, 0, 0);
     wprintw(inputwindow, "Select a nickname:\n");
     wrefresh(mainwindow);
     wrefresh(inputwindow);
@@ -226,9 +227,9 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, interrupt_handler);
 
     wprintw(mainwindow, "Connecting to server %s\n", address);
-    
+
     wrefresh(mainwindow);
-    
+
     network_socket = init_socket(address);
 
     setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO,
