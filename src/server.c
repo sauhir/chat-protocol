@@ -220,7 +220,6 @@ int main(int argc, char *argv[]) {
         }
 
         if ((time(NULL) - seconds) > 15) {
-            printf("Ping!\n");
             send_to_all(client_sockets, MAX_SOCKETS, "::server:ping:PING\n");
             seconds = time(NULL);
         }
