@@ -328,7 +328,7 @@ int main(int argc, char *argv[]) {
                     if (msg->message_type == msg_type_status) {
                         printtime();
                         wprintw(mainwindow, "-- %s\n", msg->message);
-                    } else {
+                    } else if (msg->message_type == msg_type_normal) {
                         printtime();
                         wprintw(mainwindow, "<%s> %s\n", msg->nickname,
                                 msg->message);

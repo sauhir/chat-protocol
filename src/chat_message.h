@@ -22,7 +22,8 @@
 typedef enum {
     msg_type_normal = 0,
     msg_type_status = 1,
-    msg_type_unknown = 2
+    msg_type_ping = 2,
+    msg_type_unknown = 3
 } msg_type;
 
 /* Chat message */

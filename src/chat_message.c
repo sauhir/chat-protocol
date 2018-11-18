@@ -32,6 +32,8 @@ char *msg_type_string(msg_type message_type) {
         return "normal";
     } else if (message_type == msg_type_status) {
         return "status";
+    } else if (message_type == msg_type_ping) {
+        return "ping";
     } else {
         return "unknown";
     }
@@ -94,6 +96,8 @@ chatMessage *parse_message(char *message) {
             msg->message_type = msg_type_normal;
         } else if (strcmp(msg_type_str, "status") == 0) {
             msg->message_type = msg_type_status;
+        } else if (strcmp(msg_type_str, "ping") == 0) {
+            msg->message_type = msg_type_ping;
         } else {
             msg->message_type = msg_type_unknown;
         }
