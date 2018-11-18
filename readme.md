@@ -2,6 +2,22 @@
 
 This is a simple chat protocol I'm working on every once in a while in ANSI-C just for fun. I try to keep it as pure ANSI-C so that I'm able to compile and run it on my Amiga computer.
 
+## Requirements
+
+### Mac and Linux
+
+[Curses](https://en.wikipedia.org/wiki/Curses_(programming_library))
+
+### Amiga
+
+SAS/C 6.50+
+
+[curses 2.10](http://aminet.net/package/dev/misc/curses210)
+
+[AmiTCP SDK](http://aminet.net/package/comm/tcp/AmiTCP-SDK-4.3)
+
+You may need to change the library locations in the smakefile to fit your installation.
+
 ## Protocol description
 
 ### Handshake
@@ -52,7 +68,13 @@ Commands have the message_type "command". Chat history could be requested with:
 
 ## Compiling
 
-Just run `make` and the server and client programs should be compiled.
+### Mac and Linux
+
+Run `make` and the server and client programs should be compiled.
+
+### Amiga
+
+Run `smake` and the client should be compiled. Server is not yet ported for the Amiga.
 
 ## Implementation
 
