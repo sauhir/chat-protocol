@@ -147,7 +147,8 @@ int init_socket(char *address) {
     /* Check for connection error */
     if (status == -1) {
         wprintw(mainwindow,
-                "There was an error connecting to the remote socket.\n\n");
+                "There was an error connecting to the remote socket.\n"
+                "Press any key to quit.\n");
         getch();
         endwin();
         exit(1);
@@ -191,6 +192,16 @@ void curses_init(void) {
     scrollok(inputwindow, TRUE);
 }
 
+/*
+ * Clear the input field and reset the input position.
+ */
+void reset_input(char *input_buffer, int *input_pos, chatSession *session) {
+    memset(input_buffer, 0, MAX_MSG);
+    *input_pos = 0;
+    wclear(inputwindow);
+    wprintw(inputwindow, "%s >> ", session->nickname);
+}
+
 int main(int argc, char *argv[]) {
     int network_socket;    /* Socket for the server connection */
     char *server_response; /* Server response buffer */
@@ -226,7 +237,6 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, interrupt_handler);
 
     wprintw(mainwindow, "Connecting to server %s\n", address);
-
     wrefresh(mainwindow);
 
     network_socket = init_socket(address);
@@ -239,7 +249,6 @@ int main(int argc, char *argv[]) {
 
     printtime();
     wprintw(mainwindow, "Connected to the server\n");
-
     wrefresh(mainwindow);
 
     server_response = calloc(MAX_MSG, sizeof(char));
@@ -260,8 +269,7 @@ int main(int argc, char *argv[]) {
     nodelay(inputwindow, TRUE);
     noecho();
 
-    wclear(inputwindow);
-    wprintw(inputwindow, "CHAT >> ");
+    reset_input(input_buffer, &input_pos, session);
 
     /* Main loop */
     while (running) {
@@ -321,20 +329,12 @@ int main(int argc, char *argv[]) {
                         session->nickname[i - 6] = input_buffer[i];
                     }
 
-                    memset(input_buffer, 0, MAX_MSG);
-                    input_pos = 0;
-                    wclear(inputwindow);
-                    wprintw(inputwindow, "CHAT >> ");
+                    reset_input(input_buffer, &input_pos, session);
                 }
                 continue;
             }
             send_message(session, input_buffer, network_socket);
-
-            memset(input_buffer, 0, MAX_MSG);
-            input_pos = 0;
-            wclear(inputwindow);
-            wprintw(inputwindow, "CHAT >> ");
-
+            reset_input(input_buffer, &input_pos, session);
         } else if (c >= 32) {
             wprintw(inputwindow, "%c", c);
             input_buffer[input_pos++] = c;
