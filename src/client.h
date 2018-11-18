@@ -19,6 +19,4 @@
 #ifndef CLIENT_H
 #define CLIENT_H
 
-#define MAX_NICK 32 /* Max length of nickname */
-
 #endif

@@ -27,4 +27,5 @@ typedef struct _chatSession {
 
 char *create_token(char *token, size_t size);
 chatSession *create_session(void);
+void session_replace_nick(chatSession *session, char *newnick);
 #endif

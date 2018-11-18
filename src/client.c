@@ -273,7 +273,7 @@ int main(int argc, char *argv[]) {
 
     /* Main loop */
     while (running) {
-        int c, c2, x, y, i;
+        int c, c2, x, y;
         chatMessage *msg;
 
         wrefresh(mainwindow);
@@ -322,13 +322,10 @@ int main(int argc, char *argv[]) {
             }
             if (strncmp(input_buffer, "/nick", 5) == 0) {
                 if (strlen(input_buffer) > 7) {
-                    for (i = 0; i < MAX_NICK; i++) {
-                        session->nickname[i] = '\0';
-                    }
-                    for (i = 6; i < (int)strlen(input_buffer); i++) {
-                        session->nickname[i - 6] = input_buffer[i];
-                    }
-
+                    char nick_tmp[MAX_NICK];
+                    memcpy(nick_tmp, &input_buffer[6],
+                           strlen(input_buffer) - 6);
+                    session_replace_nick(session, nick_tmp);
                     reset_input(input_buffer, &input_pos, session);
                 }
                 continue;

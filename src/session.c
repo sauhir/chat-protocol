@@ -17,8 +17,10 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
+#include "chat.h"
 #include "session.h"
 
 /*
@@ -43,6 +45,22 @@ char *create_token(char *token, size_t size) {
 
     token = random_string;
     return random_string;
+}
+
+/*
+ * Replace old nickname with a new one
+ */
+void session_replace_nick(chatSession *session, char *newnick) {
+    memset(session->nickname, 0, MAX_MSG);
+    strcpy(session->nickname, newnick);
+    /*
+        for (i = 0; i < MAX_NICK; i++) {
+            session->nickname[i] = '\0';
+        }
+        for (i = 6; i < (int)strlen(input_buffer); i++) {
+            session->nickname[i - 6] = input_buffer[i];
+        }
+    */
 }
 
 /*
