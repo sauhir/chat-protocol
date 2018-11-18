@@ -324,6 +324,7 @@ int main(int argc, char *argv[]) {
             if (strncmp(input_buffer, "/nick", 5) == 0) {
                 if (strlen(input_buffer) > 7) {
                     char nick_tmp[MAX_NICK];
+                    memset(nick_tmp, 0, MAX_NICK);
                     memcpy(nick_tmp, &input_buffer[6],
                            strlen(input_buffer) - 6);
                     session_replace_nick(session, nick_tmp);
