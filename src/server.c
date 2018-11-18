@@ -175,8 +175,8 @@ int main(int argc, char *argv[]) {
     struct timeval sr_timeout;       /* send() recv() timeout */
     int max_descriptor;              /* hold the largest fd number */
     int client_sockets[MAX_SOCKETS]; /* array to hold client sockets */
-    long seconds;
-    int i;
+    long seconds;                    /* Second counter for timer */
+    int i;                           /* Loop counter */
 
     signal(SIGINT, interrupt_handler);
 

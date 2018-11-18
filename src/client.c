@@ -192,18 +192,17 @@ void curses_init(void) {
 }
 
 int main(int argc, char *argv[]) {
-    int network_socket;
-    int status;
-    char *server_response;
-    char *input;
-    size_t len;
-    chatSession *session;
-    char *input_buffer;
-    int input_pos = 0;
+    int network_socket;    /* Socket for the server connection */
+    char *server_response; /* Server response buffer */
+    char *input_buffer;    /* Input buffer */
+    char *address;         /* IP address of the server */
+    chatSession *session;  /* Current chat session */
+
+    size_t len;                    /* Server response length */
+    int input_pos = 0;             /* Current input cursor position */
     fd_set socket_set;             /* file descriptor set */
     struct timeval select_timeout; /* select() timeout */
     struct timeval recv_timeout;   /* recv() timeout */
-    char *address;
 
     running = 1;
     /* Set a 10 msec timeout to select() calls */
@@ -244,16 +243,13 @@ int main(int argc, char *argv[]) {
     wrefresh(mainwindow);
 
     server_response = calloc(MAX_MSG, sizeof(char));
-    input = calloc(MAX_MSG, sizeof(char));
     input_buffer = calloc(MAX_MSG, sizeof(char));
 
     /* Shake hands with the server */
-    status = handshake(network_socket, session);
-    if (status == -1) {
+    if (handshake(network_socket, session) == -1) {
         wprintw(mainwindow, "Handshake failed.\n");
         endwin();
         free(server_response);
-        free(input);
         free(input_buffer);
         exit(1);
     }
@@ -269,7 +265,7 @@ int main(int argc, char *argv[]) {
 
     /* Main loop */
     while (running) {
-        int c, c2, x, y;
+        int c, c2, x, y, i;
         chatMessage *msg;
 
         wrefresh(mainwindow);
@@ -314,6 +310,22 @@ int main(int argc, char *argv[]) {
             }
             if (strcmp(input_buffer, "/quit") == 0) {
                 running = 0;
+                continue;
+            }
+            if (strncmp(input_buffer, "/nick", 5) == 0) {
+                if (strlen(input_buffer) > 7) {
+                    for (i = 0; i < MAX_NICK; i++) {
+                        session->nickname[i] = '\0';
+                    }
+                    for (i = 6; i < (int)strlen(input_buffer); i++) {
+                        session->nickname[i - 6] = input_buffer[i];
+                    }
+
+                    memset(input_buffer, 0, MAX_MSG);
+                    input_pos = 0;
+                    wclear(inputwindow);
+                    wprintw(inputwindow, "CHAT >> ");
+                }
                 continue;
             }
             send_message(session, input_buffer, network_socket);
@@ -361,7 +373,6 @@ int main(int argc, char *argv[]) {
 
         /* Clear the arrays */
         memset(server_response, 0, MAX_MSG);
-        memset(input, 0, MAX_MSG);
     }
 
     /* Curses cleanup */
@@ -370,7 +381,6 @@ int main(int argc, char *argv[]) {
     endwin();
 
     free(server_response);
-    free(input);
     free(input_buffer);
     free(session);
 
