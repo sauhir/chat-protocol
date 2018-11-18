@@ -16,5 +16,5 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-void log_error(char *msg);
+void log_error(const char *msg);
 void log_errorf(const char *msg, ...);

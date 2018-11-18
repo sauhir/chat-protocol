@@ -19,8 +19,6 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include <stdlib.h>
-
 /* Chat session structure */
 typedef struct _chatSession {
     char *nickname; /* User's nickname */
@@ -28,6 +26,5 @@ typedef struct _chatSession {
 } chatSession;
 
 char *create_token(char *token, size_t size);
-chatSession *create_session();
-
+chatSession *create_session(void);
 #endif

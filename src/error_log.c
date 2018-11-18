@@ -16,9 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <stdarg.h>
 #include <stdio.h>
+#include <stdarg.h>
 #include <time.h>
+#include "error_log.h"
 
 /*
  * Log error without formatting to error.log

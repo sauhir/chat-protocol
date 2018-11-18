@@ -48,7 +48,7 @@ char *create_token(char *token, size_t size) {
 /*
  * Create stub session object.
  */
-chatSession *create_session() {
+chatSession *create_session(void) {
     chatSession *session = calloc(1, sizeof(chatSession));
     session->token = "";
     session->nickname = "";

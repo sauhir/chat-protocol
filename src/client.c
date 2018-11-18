@@ -16,24 +16,28 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <arpa/inet.h>
 #include <curses.h>
-#include <locale.h>
-#include <netinet/in.h>
-#include <signal.h>
+
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <locale.h>
+#include <signal.h>
 #include <string.h>
+#include <fcntl.h>
+/*
 #include <sys/select.h>
+*/
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
 
 #include "chat.h"
 #include "chat_message.h"
 #include "client.h"
-#include "error_log.h"
 #include "session.h"
 
 static volatile int running;
@@ -41,14 +45,16 @@ static volatile int running;
 static WINDOW *mainwindow;
 static WINDOW *inputwindow;
 
+int printtime();
+void curses_init();
+
 void interrupt_handler(int signal) {
     if (signal == SIGINT) {
-        log_error("interrupt received");
         running = 0;
     }
 }
 
-int printtime() {
+int printtime(void) {
     time_t rawtime;
     struct tm *timeinfo;
 
@@ -103,7 +109,10 @@ int set_nickname(chatSession *session) {
     unsigned int i;
 
     nick = calloc(MAX_NICK, sizeof(char));
+    wmove(inputwindow, 0,0);
     wprintw(inputwindow, "Select a nickname:\n");
+    wrefresh(mainwindow);
+    wrefresh(inputwindow);
     wscanw(inputwindow, " %99[^\n]", nick);
 
     /* Replace colons with underscore in nickname */
@@ -138,6 +147,7 @@ int init_socket(char *address) {
     if (status == -1) {
         wprintw(mainwindow,
                 "There was an error connecting to the remote socket.\n\n");
+        getch();
         endwin();
         exit(1);
     }
@@ -171,7 +181,7 @@ void send_message(chatSession *session, char *buffer, int network_socket) {
 /*
  * Initialize curses windows
  */
-void curses_init() {
+void curses_init(void) {
     setlocale(LC_ALL, "");
     initscr();
     mainwindow = create_newwin(LINES - 3, COLS, 0, 0);
@@ -185,7 +195,7 @@ int main(int argc, char *argv[]) {
     int status;
     char *server_response;
     char *input;
-    ssize_t len;
+    size_t len;
     chatSession *session;
     char *input_buffer;
     int input_pos = 0;
@@ -215,6 +225,10 @@ int main(int argc, char *argv[]) {
     /* Add interrupt handler to catch CTRL-C */
     signal(SIGINT, interrupt_handler);
 
+    wprintw(mainwindow, "Connecting to server %s\n", address);
+    
+    wrefresh(mainwindow);
+    
     network_socket = init_socket(address);
 
     setsockopt(network_socket, SOL_SOCKET, SO_RCVTIMEO,
@@ -225,6 +239,8 @@ int main(int argc, char *argv[]) {
 
     printtime();
     wprintw(mainwindow, "Connected to the server\n");
+
+    wrefresh(mainwindow);
 
     server_response = calloc(MAX_MSG, sizeof(char));
     input = calloc(MAX_MSG, sizeof(char));
@@ -282,7 +298,7 @@ int main(int argc, char *argv[]) {
             /* If escape code received, supress two next characters */
             wgetch(inputwindow);
             wgetch(inputwindow);
-        } else if (c == 127) {
+        } else if (c == 127 || c == 8) {
             if (input_pos > 0) {
                 /* Backspace was pressed. Erase the last character.*/
                 input_buffer[--input_pos] = 0;
@@ -293,6 +309,10 @@ int main(int argc, char *argv[]) {
         } else if (c == 13 || c == 10) {
             /* If a newline is reached submit the contents of input_buffer */
             if (input_pos == 0) {
+                continue;
+            }
+            if (strcmp(input_buffer, "/quit") == 0) {
+                running = 0;
                 continue;
             }
             send_message(session, input_buffer, network_socket);

@@ -23,7 +23,6 @@
 
 #include "chat.h"
 #include "chat_message.h"
-#include "error_log.h"
 
 char *msg_parse_token(char *param_ptr, char separator);
 
